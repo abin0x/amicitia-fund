@@ -124,10 +124,22 @@ export default function AdminDashboard() {
       { key: "gmail_app_password", value: gmailAppPassword },
     ];
     for (const u of updates) {
-      await supabase
+      const { error } = await supabase
         .from("admin_settings")
-        .update({ value: u.value, updated_at: new Date().toISOString(), updated_by: user?.id })
-        .eq("key", u.key);
+        .upsert(
+          {
+            key: u.key,
+            value: u.value,
+            updated_at: new Date().toISOString(),
+            updated_by: user?.id,
+          },
+          { onConflict: "key" }
+        );
+      if (error) {
+        toast.error(`Failed to save ${u.key}: ${error.message}`);
+        setSavingSettings(false);
+        return;
+      }
     }
     toast.success("Settings saved successfully!");
     setSavingSettings(false);

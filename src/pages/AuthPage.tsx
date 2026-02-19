@@ -45,9 +45,12 @@ export default function AuthPage() {
 
       if (!profile?.email_verified) {
         // Send verification email again
-        await supabase.functions.invoke("send-verification-email", {
+        const { error: resendError, data: resendData } = await supabase.functions.invoke("send-verification-email", {
           body: { userId: data.user.id, redirectUrl: window.location.origin },
         });
+        if (resendError || (resendData as any)?.error) {
+          toast.error((resendData as any)?.error || resendError?.message || "Failed to send verification email");
+        }
         await supabase.auth.signOut();
         toast.error("Your email is not verified. A new verification email has been sent.");
         setLoading(false);
@@ -74,9 +77,14 @@ export default function AuthPage() {
       if (signUpData.user) {
         // Small delay for profile trigger to complete
         await new Promise((r) => setTimeout(r, 1500));
-        await supabase.functions.invoke("send-verification-email", {
+        const { error: verifyEmailError, data: verifyEmailData } = await supabase.functions.invoke("send-verification-email", {
           body: { userId: signUpData.user.id, redirectUrl: window.location.origin },
         });
+        if (verifyEmailError || (verifyEmailData as any)?.error) {
+          toast.error((verifyEmailData as any)?.error || verifyEmailError?.message || "Failed to send verification email");
+          setLoading(false);
+          return;
+        }
       }
 
       toast.success("Account created! Check your email to verify your account.");

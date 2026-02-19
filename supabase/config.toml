@@ -1,0 +1,16 @@
+project_id = "rucomqixlcwimkwfafif"
+
+[functions.create-admin]
+verify_jwt = false
+
+[functions.send-email]
+verify_jwt = false
+
+[functions.send-verification-email]
+verify_jwt = false
+
+[functions.verify-email]
+verify_jwt = false
+
+[functions.delete-member]
+verify_jwt = false

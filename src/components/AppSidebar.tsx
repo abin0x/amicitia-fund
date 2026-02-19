@@ -115,14 +115,22 @@ export function AppSidebar() {
 
       <SidebarFooter className="p-4">
         <Button
-          variant="ghost"
-          className="w-full justify-start text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/60"
+          variant="outline"
+          className="h-11 w-full justify-between rounded-lg border-sidebar-border/60 bg-sidebar-accent/30 px-3 text-sidebar-foreground shadow-sm transition-all hover:border-sidebar-primary/40 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
           onClick={signOut}
         >
-          <LogOut className="mr-2 h-4 w-4" />
-          Sign Out
+          <span className="flex items-center gap-2">
+            <LogOut className="h-4 w-4" />
+            <span className="font-medium">Sign Out</span>
+          </span>
+          <span className="text-[10px] uppercase tracking-wide text-sidebar-foreground/60">Secure</span>
         </Button>
+        <div className="mt-3 text-center text-[11px] leading-4 text-sidebar-foreground/50">
+          <p>&copy; Amicitia. All rights reserved.</p>
+          <p>Developed by Obaidur Rahman Humayun</p>
+        </div>
       </SidebarFooter>
     </Sidebar>
   );
 }
+

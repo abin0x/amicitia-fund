@@ -10,13 +10,63 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
-import { Loader2, TrendingUp, Building2, Smartphone, AlertTriangle, CheckCircle2, Receipt, CalendarDays, Banknote } from "lucide-react";
+import {
+  Loader2,
+  AlertTriangle,
+  CheckCircle2,
+  CalendarDays,
+  Copy,
+} from "lucide-react";
 import { clampToValidPeriod, getMonthOptionsForYear, getYearOptionsDesc, isPeriodAfterNow, isPeriodBeforeLaunch } from "@/lib/period";
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
 ];
+
+function StepHeader({ step, title }: { step: number; title: string }) {
+  return (
+    <CardHeader className="pb-4">
+      <CardTitle className="flex items-center gap-3 text-sm font-semibold text-foreground">
+        <span className="flex h-8 w-8 items-center justify-center rounded-2xl bg-primary text-xs font-bold text-primary-foreground shadow-sm">
+          {step}
+        </span>
+        <span>{title}</span>
+      </CardTitle>
+    </CardHeader>
+  );
+}
+
+function DetailRow({ label, value, copyable = false }: { label: string; value: string; copyable?: boolean }) {
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(value);
+      toast.success(`${label} copied`);
+    } catch {
+      toast.error("Failed to copy");
+    }
+  };
+
+  return (
+    <div className="flex items-start justify-between gap-3 py-2">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <div className="flex max-w-[68%] items-center justify-end gap-2">
+        <p className="text-right text-sm font-medium text-foreground break-all">{value}</p>
+        {copyable && (
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border/70 bg-background/80 text-muted-foreground transition-colors hover:text-foreground"
+            aria-label={`Copy ${label}`}
+            title={`Copy ${label}`}
+          >
+            <Copy className="h-3.5 w-3.5" />
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function SubmitPayment() {
   const { user } = useAuth();
@@ -58,7 +108,6 @@ export default function SubmitPayment() {
     ? shareQuantity * sharePrice
     : parseInt(customAmount) || 0;
 
-  // Duplicate check
   const checkDuplicate = async (txId: string) => {
     if (!txId || txId.length < 4) { setDuplicateError(null); return false; }
     setCheckingDuplicate(true);
@@ -73,8 +122,8 @@ export default function SubmitPayment() {
       const msg = status === "approved"
         ? "This Transaction ID has already been used for an approved payment."
         : status === "pending"
-        ? "A payment with this Transaction ID has already been submitted."
-        : "This Transaction ID has been used before.";
+          ? "A payment with this Transaction ID has already been submitted."
+          : "This Transaction ID has been used before.";
       setDuplicateError(msg);
       return true;
     }
@@ -111,7 +160,6 @@ export default function SubmitPayment() {
       return;
     }
 
-    // Check existing month payment
     const { data: existingMonthPayment } = await supabase
       .from("payments")
       .select("id, status")
@@ -129,7 +177,6 @@ export default function SubmitPayment() {
       return;
     }
 
-    // Final duplicate check
     const isDuplicate = await checkDuplicate(txId);
     if (isDuplicate) { toast.error("Duplicate Transaction ID!"); return; }
 
@@ -151,7 +198,7 @@ export default function SubmitPayment() {
       if (error.code === "23505") toast.error("Payment for this month has already been made.");
       else toast.error(error.message);
     } else {
-      toast.success("Payment submitted successfully! 🎉");
+      toast.success("Payment submitted successfully!");
       const { data: insertedPayments } = await supabase
         .from("payments").select("id").eq("user_id", user.id)
         .order("created_at", { ascending: false }).limit(1);
@@ -178,160 +225,202 @@ export default function SubmitPayment() {
   }, [year, month, monthOptions]);
 
   return (
-    <div className="max-w-lg mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Receipt className="h-6 w-6 text-primary" />
-          Submit Payment
-        </h1>
-        <p className="text-muted-foreground text-sm">Purchase shares or make a custom contribution</p>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Step 1: Payment Type */}
-        <Card className="shadow-md border-0 bg-card/90 backdrop-blur overflow-hidden">
-          <CardHeader className="pb-3 bg-primary/5 border-b border-primary/10">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-bold">1</span>
-              Payment Type & Amount
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-4 space-y-4">
+    <div className="mx-auto max-w-lg space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Card className="overflow-hidden rounded-[28px] border border-border/70 bg-card/90 shadow-[0_16px_40px_rgba(16,24,40,0.10)] backdrop-blur-xl">
+          <StepHeader step={1} title="Payment Type & Amount" />
+          <CardContent className="space-y-4 pt-0">
             <RadioGroup
               value={paymentType}
               onValueChange={(v) => setPaymentType(v as "share" | "custom")}
-              className="flex gap-3"
+              className="grid grid-cols-2 gap-3"
             >
-              <label htmlFor="share" className={`flex-1 flex items-center gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all ${paymentType === "share" ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"}`}>
-                <RadioGroupItem value="share" id="share" />
-                <TrendingUp className="h-4 w-4 text-primary" />
-                <span className="text-sm font-medium">Buy Shares</span>
+              <label
+                htmlFor="share"
+                className={`rounded-[16px] border px-3 py-2.5 transition-all ${paymentType === "share" ? "border-primary bg-primary/5 shadow-sm" : "border-border/70 bg-background/70"}`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <RadioGroupItem value="share" id="share" />
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold leading-5 text-foreground">Buy Shares</p>
+                  </div>
+                </div>
               </label>
+
               {customEnabled && (
-                <label htmlFor="custom" className={`flex-1 flex items-center gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all ${paymentType === "custom" ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"}`}>
-                  <RadioGroupItem value="custom" id="custom" />
-                  <Banknote className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-medium">Custom Amount</span>
+                <label
+                  htmlFor="custom"
+                  className={`rounded-[16px] border px-3 py-2.5 transition-all ${paymentType === "custom" ? "border-primary bg-primary/5 shadow-sm" : "border-border/70 bg-background/70"}`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <RadioGroupItem value="custom" id="custom" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold leading-5 text-foreground">Custom Amount</p>
+                    </div>
+                  </div>
                 </label>
               )}
             </RadioGroup>
 
             {paymentType === "share" ? (
-              <div className="space-y-3">
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Number of Shares (৳{sharePrice.toLocaleString()} each)</Label>
+              <div className="space-y-4 rounded-[24px] border border-border/60 bg-muted/30 p-4">
+                <div className="space-y-2">
+                  <Label className="text-xs font-medium text-muted-foreground">
+                    Number of Shares (৳{sharePrice.toLocaleString()} each)
+                  </Label>
                   <Input
-                    type="number" min={1}
+                    type="number"
+                    min={1}
                     value={shareQuantity === 0 ? "" : shareQuantity}
-                    onChange={(e) => { const v = e.target.value; setShareQuantity(v === "" ? 0 : Math.max(1, parseInt(v) || 0)); }}
-                    onBlur={() => { if (shareQuantity < 1) setShareQuantity(1); }}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setShareQuantity(v === "" ? 0 : Math.max(1, parseInt(v) || 0));
+                    }}
+                    onBlur={() => {
+                      if (shareQuantity < 1) setShareQuantity(1);
+                    }}
+                    className="h-12 rounded-2xl border-border/70 bg-background/90 text-base font-semibold"
                   />
                 </div>
-                <div className="bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-xl p-3 flex items-center justify-between">
-                  <span className="text-sm font-medium text-muted-foreground">Total Amount</span>
-                  <span className="text-xl font-bold text-primary">৳{totalAmount.toLocaleString()}</span>
+
+                <div className="rounded-[22px] border border-primary/15 bg-gradient-to-r from-primary/10 to-primary/5 px-4 py-4">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Total Amount</p>
+                  <div className="mt-2 flex items-end justify-between gap-3">
+                    <p className="text-2xl font-extrabold tracking-tight text-primary">৳{totalAmount.toLocaleString()}</p>
+                    <span className="rounded-full border border-border/60 bg-card/90 px-2.5 py-1 text-[11px] font-medium text-primary shadow-sm">
+                      {shareQuantity} {shareQuantity === 1 ? "share" : "shares"}
+                    </span>
+                  </div>
                 </div>
               </div>
             ) : (
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Amount (minimum ৳{minCustom.toLocaleString()})</Label>
-                <Input type="number" min={minCustom} value={customAmount} onChange={(e) => setCustomAmount(e.target.value)} placeholder={`৳${minCustom.toLocaleString()}`} />
+              <div className="space-y-2 rounded-[24px] border border-border/60 bg-muted/30 p-4">
+                <Label className="text-xs font-medium text-muted-foreground">
+                  Amount (minimum ৳{minCustom.toLocaleString()})
+                </Label>
+                <Input
+                  type="number"
+                  min={minCustom}
+                  value={customAmount}
+                  onChange={(e) => setCustomAmount(e.target.value)}
+                  placeholder={`৳${minCustom.toLocaleString()}`}
+                  className="h-12 rounded-2xl border-border/70 bg-background/90 text-base font-semibold"
+                />
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Step 2: Payment Method */}
-        <Card className="shadow-md border-0 bg-card/90 backdrop-blur overflow-hidden">
-          <CardHeader className="pb-3 bg-primary/5 border-b border-primary/10">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-bold">2</span>
-              Payment Method
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-4 space-y-4">
+        <Card className="overflow-hidden rounded-[28px] border border-border/70 bg-card/90 shadow-[0_16px_40px_rgba(16,24,40,0.10)] backdrop-blur-xl">
+          <StepHeader step={2} title="Payment Method" />
+          <CardContent className="space-y-4 pt-0">
             <RadioGroup
               value={paymentMethod}
               onValueChange={(v) => setPaymentMethod(v as "bank" | "mobile_banking")}
               className="grid grid-cols-2 gap-3"
             >
-              <label htmlFor="bank" className={`flex items-center gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all ${paymentMethod === "bank" ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"}`}>
-                <RadioGroupItem value="bank" id="bank" />
-                <Building2 className="h-4 w-4 text-primary" />
-                <span className="text-sm font-medium">Bank</span>
+              <label
+                htmlFor="bank"
+                className={`rounded-2xl border p-4 transition-all ${paymentMethod === "bank" ? "border-primary bg-primary/5 shadow-sm" : "border-border/70 bg-background/70"}`}
+              >
+                <div className="flex items-start gap-3">
+                  <RadioGroupItem value="bank" id="bank" className="mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Bank</p>
+                  </div>
+                </div>
               </label>
-              <label htmlFor="mobile_banking" className={`flex items-center gap-2 p-3 rounded-xl border-2 cursor-pointer transition-all ${paymentMethod === "mobile_banking" ? "border-primary bg-primary/5" : "border-border hover:border-primary/30"}`}>
-                <RadioGroupItem value="mobile_banking" id="mobile_banking" />
-                <Smartphone className="h-4 w-4 text-primary" />
-                <span className="text-sm font-medium">Mobile Banking</span>
+
+              <label
+                htmlFor="mobile_banking"
+                className={`rounded-2xl border p-4 transition-all ${paymentMethod === "mobile_banking" ? "border-primary bg-primary/5 shadow-sm" : "border-border/70 bg-background/70"}`}
+              >
+                <div className="flex items-start gap-3">
+                  <RadioGroupItem value="mobile_banking" id="mobile_banking" className="mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Mobile Banking</p>
+                  </div>
+                </div>
               </label>
             </RadioGroup>
 
-            <div className="bg-muted/50 rounded-xl p-3 space-y-1">
+            <div className="rounded-2xl border border-border/70 bg-muted/35 px-4 py-3">
+              <p className="mb-2 text-sm font-semibold text-foreground">
+                {paymentMethod === "bank" ? "Bank Account Details" : "Mobile Banking Details"}
+              </p>
+
               {paymentMethod === "bank" ? (
-                <>
-                  <p className="text-xs font-semibold flex items-center gap-1.5"><Building2 className="h-3.5 w-3.5 text-primary" /> Bank Account Details</p>
-                  <p className="text-xs text-muted-foreground">Savings A/C No: <span className="font-medium text-foreground">3707031118434০</span></p>
-                  <p className="text-xs text-muted-foreground">Name: <span className="font-medium text-foreground">AMICITIA</span></p>
-                  <p className="text-xs text-muted-foreground">Bank: <span className="font-medium text-foreground">Bangladesh Krishi Bank</span></p>
-                  <p className="text-xs text-muted-foreground">Branch: <span className="font-medium text-foreground">Bishwamvarpur Branch</span></p>
-                  <p className="text-xs text-muted-foreground">Routing No: <span className="font-medium text-foreground">03590019</span></p>
-                  <p className="text-xs text-muted-foreground">Swift Code: <span className="font-medium text-foreground">BKBABDDH</span></p>
-                </>
+                <div className="divide-y divide-border/60">
+                  <DetailRow label="Savings A/C No" value="37070311184340" copyable />
+                  <DetailRow label="Name" value="AMICITIA" />
+                  <DetailRow label="Bank" value="Bangladesh Krishi Bank" />
+                  <DetailRow label="Branch" value="Bishwamvarpur Branch" />
+                  <DetailRow label="Routing No" value="03590019" />
+                  <DetailRow label="Swift Code" value="BKBABDDH" />
+                </div>
               ) : (
-                <>
-                  <p className="text-xs font-semibold flex items-center gap-1.5"><Smartphone className="h-3.5 w-3.5 text-primary" /> Mobile Banking Details</p>
-                  <p className="text-xs text-muted-foreground">bKash: <span className="font-medium text-foreground">01714769344</span></p>
-                  <p className="text-xs text-muted-foreground">Type: <span className="font-medium text-foreground">Send Money / Payment</span></p>
-                </>
+                <div className="divide-y divide-border/60">
+                  <DetailRow label="bKash" value="01714769344" copyable />
+                  <DetailRow label="Type" value="Send Money / Payment" />
+                </div>
               )}
             </div>
           </CardContent>
         </Card>
 
-        {/* Step 3: Period & Transaction Proof */}
-        <Card className="shadow-md border-0 bg-card/90 backdrop-blur overflow-hidden">
-          <CardHeader className="pb-3 bg-primary/5 border-b border-primary/10">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-bold">3</span>
-              Period & Transaction Proof
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="pt-4 space-y-4">
+        <Card className="overflow-hidden rounded-[28px] border border-border/70 bg-card/90 shadow-[0_16px_40px_rgba(16,24,40,0.10)] backdrop-blur-xl">
+          <StepHeader step={3} title="Period & Transaction Proof" />
+          <CardContent className="space-y-4 pt-0">
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground flex items-center gap-1"><CalendarDays className="h-3 w-3" /> Month</Label>
+              <div className="space-y-2">
+                <Label className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <CalendarDays className="h-3 w-3" />
+                  Month
+                </Label>
                 <Select value={month} onValueChange={setMonth}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-12 rounded-2xl border-border/70 bg-background/80">
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
-                    {monthOptions.map((m) => <SelectItem key={m} value={String(m)}>{MONTHS[m - 1]}</SelectItem>)}
+                    {monthOptions.map((m) => (
+                      <SelectItem key={m} value={String(m)}>{MONTHS[m - 1]}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground flex items-center gap-1"><CalendarDays className="h-3 w-3" /> Year</Label>
+
+              <div className="space-y-2">
+                <Label className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <CalendarDays className="h-3 w-3" />
+                  Year
+                </Label>
                 <Select value={year} onValueChange={setYear}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="h-12 rounded-2xl border-border/70 bg-background/80">
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
-                    {years.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
+                    {years.map((y) => (
+                      <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
-            {/* Transaction ID */}
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <Label className="text-xs text-muted-foreground">Transaction ID *</Label>
               <div className="relative">
                 <Input
                   value={transactionId}
                   onChange={(e) => setTransactionId(e.target.value)}
                   placeholder="Enter your Transaction ID"
-                  className={duplicateError ? "border-destructive pr-10" : "pr-10"}
+                  className={`h-12 rounded-2xl border-border/70 bg-background/80 pr-10 ${duplicateError ? "border-destructive" : ""}`}
                 />
-                {checkingDuplicate && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />}
+                {checkingDuplicate && (
+                  <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+                )}
                 {!checkingDuplicate && transactionId.trim().length >= 4 && !duplicateError && (
-                  <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-success" />
+                  <CheckCircle2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-success" />
                 )}
               </div>
             </div>
@@ -347,13 +436,13 @@ export default function SubmitPayment() {
 
         <Button
           type="submit"
-          className="w-full h-12 text-base font-semibold shadow-lg hover:shadow-xl transition-all rounded-xl"
+          className="h-12 w-full rounded-2xl text-base font-semibold shadow-lg hover:shadow-xl"
           disabled={submitting || !!duplicateError || checkingDuplicate}
         >
           {submitting ? (
             <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...</>
           ) : (
-            `Submit Payment — ৳${totalAmount.toLocaleString()}`
+            `Submit Payment - ৳${totalAmount.toLocaleString()}`
           )}
         </Button>
       </form>

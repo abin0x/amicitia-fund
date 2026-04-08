@@ -57,7 +57,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Delete from profiles and roles first
+    // Delete related app data before removing the auth user
+    await supabase.from("payments").delete().eq("user_id", userId);
     await supabase.from("user_roles").delete().eq("user_id", userId);
     await supabase.from("profiles").delete().eq("user_id", userId);
 

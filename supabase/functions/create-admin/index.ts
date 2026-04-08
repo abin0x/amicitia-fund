@@ -61,10 +61,26 @@ Deno.serve(async (req) => {
         userId = newUser.user.id;
       }
 
-      await adminClient
-        .from("user_roles")
-        .update({ role: "admin" })
-        .eq("user_id", userId);
+      await adminClient.from("profiles").upsert(
+        {
+          admin_only: true,
+          user_id: userId,
+          name: BOOTSTRAP_ADMIN_NAME,
+          email: BOOTSTRAP_ADMIN_EMAIL,
+          mobile_number: "",
+          email_verified: true,
+          is_blocked: false,
+        },
+        { onConflict: "user_id" },
+      );
+
+      await adminClient.from("user_roles").upsert(
+        {
+          user_id: userId,
+          role: "admin",
+        },
+        { onConflict: "user_id" },
+      );
 
       return new Response(JSON.stringify({
         success: true,
@@ -117,12 +133,15 @@ Deno.serve(async (req) => {
       });
     }
 
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const displayName = String(name ?? "").trim();
+
     // Create user with service role (auto-confirms)
     const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
-      email,
+      email: normalizedEmail,
       password,
       email_confirm: true,
-      user_metadata: { name: name || "" },
+      user_metadata: { name: displayName, admin_only: true },
     });
 
     if (createError) {
@@ -132,11 +151,26 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Update role to admin (trigger already created 'member' role)
-    await adminClient
-      .from("user_roles")
-      .update({ role: "admin" })
-      .eq("user_id", newUser.user.id);
+    await adminClient.from("profiles").upsert(
+      {
+        admin_only: true,
+        user_id: newUser.user.id,
+        name: displayName,
+        email: normalizedEmail,
+        mobile_number: "",
+        email_verified: true,
+        is_blocked: false,
+      },
+      { onConflict: "user_id" },
+    );
+
+    await adminClient.from("user_roles").upsert(
+      {
+        user_id: newUser.user.id,
+        role: "admin",
+      },
+      { onConflict: "user_id" },
+    );
 
     return new Response(JSON.stringify({ success: true, user_id: newUser.user.id }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

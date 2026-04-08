@@ -64,7 +64,8 @@ Deno.serve(async (req) => {
     if (!gmailEmail) throw new Error("Gmail email is not configured in admin settings");
     if (!gmailAppPassword) throw new Error("Gmail App Password is not configured");
 
-    const verifyLink = `${redirectUrl || "https://amicitia.lovable.app"}/verify-email?token=${token}`;
+    const baseUrl = redirectUrl || Deno.env.get("PUBLIC_SITE_URL") || "http://localhost:8080";
+    const verifyLink = `${baseUrl}/verify-email?token=${token}`;
 
     const html = `
       <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">

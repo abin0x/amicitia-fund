@@ -6,9 +6,9 @@ import { Navigate } from "react-router-dom";
  * Members (or admins in member view) see the member dashboard.
  */
 export default function ViewModeRedirect({ children }: { children: React.ReactNode }) {
-  const { role, viewMode } = useAuth();
+  const { role, viewMode, canAccessMemberView } = useAuth();
 
-  if (role === "admin" && viewMode === "admin") {
+  if (role === "admin" && (viewMode === "admin" || !canAccessMemberView)) {
     return <Navigate to="/admin" replace />;
   }
 

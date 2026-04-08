@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { StatusBadge } from "@/components/StatusBadge";
-import { Search, AlertTriangle, UserX, CalendarX, Eye } from "lucide-react";
+import { Search, AlertTriangle, Eye } from "lucide-react";
 import { getMonthOptionsForYear, getYearOptionsDesc } from "@/lib/period";
 
 const MONTHS = [
@@ -73,10 +73,7 @@ export default function AdminPendingPayments() {
 
   const year = parseInt(selectedYear);
 
-  // Determine which months to check for selected year
-  const monthsToCheck = useMemo(() => {
-    return getMonthOptionsForYear(year);
-  }, [year]);
+  const monthsToCheck = useMemo(() => getMonthOptionsForYear(year), [year]);
 
   useEffect(() => {
     if (filterMonth === "all") return;
@@ -93,7 +90,7 @@ export default function AdminPendingPayments() {
       const approvedSet = new Set(
         memberPayments
           .filter((p) => p.status === "approved" && p.year === year)
-          .map((p) => p.month)
+          .map((p) => p.month),
       );
 
       const missing: { month: number; year: number }[] = [];
@@ -104,7 +101,6 @@ export default function AdminPendingPayments() {
       }
 
       if (missing.length > 0) {
-        // Filter by selected month if set
         const filteredMissing =
           filterMonth === "all"
             ? missing
@@ -128,124 +124,92 @@ export default function AdminPendingPayments() {
     if (!searchName) return pendingMembers;
     const q = searchName.toLowerCase();
     return pendingMembers.filter(
-      (m) =>
-        m.profile.name.toLowerCase().includes(q) ||
-        m.profile.email.toLowerCase().includes(q)
+      (m) => m.profile.name.toLowerCase().includes(q) || m.profile.email.toLowerCase().includes(q),
     );
   }, [pendingMembers, searchName]);
 
-  // Sort by most missing months first
   const sorted = useMemo(
     () => [...filtered].sort((a, b) => b.missingMonths.length - a.missingMonths.length),
-    [filtered]
+    [filtered],
   );
 
   const years = getYearOptionsDesc();
+  const totalMissedMonths = sorted.reduce((sum, m) => sum + m.missingMonths.length, 0);
+  const totalPendingAmount = sorted.reduce((sum, m) => sum + m.totalPending, 0);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-20 text-muted-foreground">
-        Loading...
-      </div>
-    );
+    return <div className="flex items-center justify-center py-20 text-muted-foreground">Loading...</div>;
   }
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Pending Payments</h1>
-        <p className="text-muted-foreground">
-          Track members who haven't paid for specific months
-        </p>
-      </div>
+      <div className="space-y-3">
+        <div className="overflow-hidden rounded-[28px] border border-destructive/15 bg-[linear-gradient(135deg,hsla(var(--destructive),0.14),hsla(var(--card),0.96)_45%,rgba(249,115,22,0.08))] px-5 py-5 shadow-[0_18px_40px_rgba(16,24,40,0.10)] backdrop-blur-xl dark:border-destructive/20 dark:bg-[linear-gradient(135deg,rgba(220,38,38,0.16),rgba(20,28,48,0.96)_46%,rgba(249,115,22,0.10))]">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">Total Pending Amount</p>
+              <p className="mt-2 text-3xl font-extrabold tracking-tight text-foreground">৳{totalPendingAmount.toLocaleString()}</p>
+            </div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-[20px] border border-destructive/12 bg-card/90 text-destructive shadow-sm dark:border-destructive/20 dark:bg-destructive/10">
+              <AlertTriangle className="h-5 w-5" />
+            </div>
+          </div>
+        </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="border-0 shadow-md bg-gradient-to-br from-destructive/10 to-destructive/5">
-          <CardContent className="pt-5 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-destructive/15">
-                <UserX className="h-5 w-5 text-destructive" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{sorted.length}</p>
-                <p className="text-xs text-muted-foreground">Members with Pending</p>
-              </div>
+        <div className="overflow-hidden rounded-[24px] border border-border/70 bg-card/88 p-4 shadow-[0_16px_38px_rgba(16,24,40,0.08)] backdrop-blur-xl">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-[16px] border border-destructive/10 bg-destructive/5 px-3 py-2.5">
+              <p className="text-[11px] text-muted-foreground">Members with Pending</p>
+              <p className="mt-1 text-lg font-extrabold leading-6 text-foreground">{sorted.length}</p>
             </div>
-          </CardContent>
-        </Card>
-        <Card className="border-0 shadow-md bg-gradient-to-br from-orange-500/10 to-orange-500/5">
-          <CardContent className="pt-5 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-orange-500/15">
-                <CalendarX className="h-5 w-5 text-orange-500" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">
-                  {sorted.reduce((sum, m) => sum + m.missingMonths.length, 0)}
-                </p>
-                <p className="text-xs text-muted-foreground">Total Missed Months</p>
-              </div>
+            <div className="rounded-[16px] border border-orange-500/10 bg-orange-500/5 px-3 py-2.5">
+              <p className="text-[11px] text-muted-foreground">Total Missed Months</p>
+              <p className="mt-1 text-lg font-extrabold leading-6 text-foreground">{totalMissedMonths}</p>
             </div>
-          </CardContent>
-        </Card>
-        <Card className="border-0 shadow-md bg-gradient-to-br from-primary/10 to-primary/5">
-          <CardContent className="pt-5 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/15">
-                <AlertTriangle className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">
-                  ৳{sorted.reduce((sum, m) => sum + m.totalPending, 0).toLocaleString()}
-                </p>
-                <p className="text-xs text-muted-foreground">Total Pending Amount</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3 items-end">
-        <Select value={selectedYear} onValueChange={setSelectedYear}>
-          <SelectTrigger className="w-[120px] h-9">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {years.map((y) => (
-              <SelectItem key={y} value={String(y)}>{y}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={filterMonth} onValueChange={setFilterMonth}>
-          <SelectTrigger className="w-[160px] h-9">
-            <SelectValue placeholder="All Months" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Months</SelectItem>
-            {monthsToCheck.map((m) => (
-              <SelectItem key={m} value={String(m)}>{MONTHS[m - 1]}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search member..."
-            value={searchName}
-            onChange={(e) => setSearchName(e.target.value)}
-            className="pl-9 h-9 w-[200px]"
-          />
+          </div>
         </div>
       </div>
 
-      {/* Table */}
+      <div className="rounded-[24px] border border-border/70 bg-card/88 p-4 shadow-[0_16px_38px_rgba(16,24,40,0.08)] backdrop-blur-xl">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-[120px_160px_minmax(0,1fr)]">
+          <Select value={selectedYear} onValueChange={setSelectedYear}>
+            <SelectTrigger className="h-11 rounded-2xl border-border/70 bg-muted/25 px-4">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {years.map((y) => (
+                <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={filterMonth} onValueChange={setFilterMonth}>
+            <SelectTrigger className="h-11 rounded-2xl border-border/70 bg-muted/25 px-4">
+              <SelectValue placeholder="All Months" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Months</SelectItem>
+              {monthsToCheck.map((m) => (
+                <SelectItem key={m} value={String(m)}>{MONTHS[m - 1]}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <div className="relative col-span-2 md:col-span-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search member..."
+              value={searchName}
+              onChange={(e) => setSearchName(e.target.value)}
+              className="h-11 rounded-2xl border-border/70 bg-muted/25 pl-9"
+            />
+          </div>
+        </div>
+      </div>
+
       <Card className="shadow-lg border-0 bg-card/80 backdrop-blur">
         <CardHeader>
-          <CardTitle className="text-lg">
-            Pending Members ({sorted.length})
-          </CardTitle>
+          <CardTitle className="text-lg">Pending Members ({sorted.length})</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
@@ -289,11 +253,7 @@ export default function AdminPendingPayments() {
                     ৳{m.totalPending.toLocaleString()}
                   </TableCell>
                   <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setSelectedMember(m)}
-                    >
+                    <Button variant="ghost" size="sm" onClick={() => setSelectedMember(m)}>
                       <Eye className="h-4 w-4" />
                     </Button>
                   </TableCell>
@@ -302,7 +262,7 @@ export default function AdminPendingPayments() {
               {sorted.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                    🎉 All members have paid for the selected period!
+                    All members have paid for the selected period.
                   </TableCell>
                 </TableRow>
               )}
@@ -311,30 +271,22 @@ export default function AdminPendingPayments() {
         </CardContent>
       </Card>
 
-      {/* Member Detail Dialog */}
       <Dialog open={!!selectedMember} onOpenChange={() => setSelectedMember(null)}>
         <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {selectedMember?.profile.name || "Member"} — {selectedYear} Payment History
+              {selectedMember?.profile.name || "Member"} - {selectedYear} Payment History
             </DialogTitle>
           </DialogHeader>
           {selectedMember && (
             <div className="space-y-4">
-              <div className="text-sm text-muted-foreground">
-                {selectedMember.profile.email}
-              </div>
+              <div className="text-sm text-muted-foreground">{selectedMember.profile.email}</div>
 
-              {/* Month-by-month status */}
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+              <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
                 {monthsToCheck.map((m) => {
                   const isPaid = !selectedMember.missingMonths.some((mm) => mm.month === m);
-                  const payment = selectedMember.payments.find(
-                    (p) => p.month === m && p.status === "approved"
-                  );
-                  const pendingPayment = selectedMember.payments.find(
-                    (p) => p.month === m && p.status === "pending"
-                  );
+                  const payment = selectedMember.payments.find((p) => p.month === m && p.status === "approved");
+                  const pendingPayment = selectedMember.payments.find((p) => p.month === m && p.status === "pending");
 
                   return (
                     <div
@@ -343,12 +295,12 @@ export default function AdminPendingPayments() {
                         isPaid
                           ? "bg-emerald-500/10 border-emerald-500/20"
                           : pendingPayment
-                          ? "bg-yellow-500/10 border-yellow-500/20"
-                          : "bg-destructive/10 border-destructive/20"
+                            ? "bg-yellow-500/10 border-yellow-500/20"
+                            : "bg-destructive/10 border-destructive/20"
                       }`}
                     >
                       <p className="text-xs font-medium">{MONTHS[m - 1].slice(0, 3)}</p>
-                      <p className="text-[10px] mt-1">
+                      <p className="mt-1 text-[10px]">
                         {isPaid ? (
                           <span className="text-emerald-600 font-semibold">Paid</span>
                         ) : pendingPayment ? (
@@ -358,16 +310,13 @@ export default function AdminPendingPayments() {
                         )}
                       </p>
                       {payment && (
-                        <p className="text-[10px] text-muted-foreground">
-                          ৳{payment.amount.toLocaleString()}
-                        </p>
+                        <p className="text-[10px] text-muted-foreground">৳{payment.amount.toLocaleString()}</p>
                       )}
                     </div>
                   );
                 })}
               </div>
 
-              {/* Payment history for the year */}
               {selectedMember.payments.length > 0 && (
                 <div>
                   <p className="text-sm font-semibold mb-2">Payments in {selectedYear}</p>
@@ -377,15 +326,11 @@ export default function AdminPendingPayments() {
                       .map((p) => (
                         <div
                           key={p.id}
-                          className="flex items-center justify-between text-sm bg-muted/30 rounded-lg px-3 py-2"
+                          className="flex items-center justify-between rounded-lg bg-muted/30 px-3 py-2 text-sm"
                         >
                           <div>
-                            <span className="font-medium">
-                              {MONTHS[p.month - 1]}
-                            </span>
-                            <span className="text-muted-foreground ml-2">
-                              ৳{p.amount.toLocaleString()}
-                            </span>
+                            <span className="font-medium">{MONTHS[p.month - 1]}</span>
+                            <span className="ml-2 text-muted-foreground">৳{p.amount.toLocaleString()}</span>
                           </div>
                           <StatusBadge status={p.status as any} />
                         </div>
@@ -394,7 +339,7 @@ export default function AdminPendingPayments() {
                 </div>
               )}
 
-              <div className="bg-muted/50 rounded-lg p-3 text-sm">
+              <div className="rounded-lg bg-muted/50 p-3 text-sm">
                 <p>
                   <span className="text-muted-foreground">Missing:</span>{" "}
                   <span className="font-semibold text-destructive">
@@ -403,9 +348,7 @@ export default function AdminPendingPayments() {
                 </p>
                 <p>
                   <span className="text-muted-foreground">Pending Amount:</span>{" "}
-                  <span className="font-semibold">
-                    ৳{selectedMember.totalPending.toLocaleString()}
-                  </span>
+                  <span className="font-semibold">৳{selectedMember.totalPending.toLocaleString()}</span>
                 </p>
               </div>
             </div>

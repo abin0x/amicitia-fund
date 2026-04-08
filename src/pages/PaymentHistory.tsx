@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getMonthOptionsForYear, getYearOptionsDesc, isPeriodBeforeLaunch } from "@/lib/period";
@@ -19,16 +20,19 @@ export default function PaymentHistory() {
   const [payments, setPayments] = useState<any[]>([]);
   const [filterMonth, setFilterMonth] = useState<string>("all");
   const [filterYear, setFilterYear] = useState<string>("all");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) return;
+    setLoading(true);
     supabase
       .from("payments")
       .select("*")
       .eq("user_id", user.id)
       .order("year", { ascending: false })
       .order("month", { ascending: false })
-      .then(({ data }) => setPayments(data || []));
+      .then(({ data }) => setPayments(data || []))
+      .finally(() => setLoading(false));
   }, [user]);
 
   const years = getYearOptionsDesc();
@@ -50,17 +54,39 @@ export default function PaymentHistory() {
     return true;
   });
 
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-2 gap-3">
+          <Skeleton className="h-10 w-full rounded-xl" />
+          <Skeleton className="h-10 w-full rounded-xl" />
+        </div>
+
+        <Card className="shadow-lg border-0 bg-card/80 backdrop-blur">
+          <CardHeader>
+            <Skeleton className="h-6 w-40 rounded-xl" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <div key={index} className="grid grid-cols-7 gap-3">
+                  {Array.from({ length: 7 }).map((__, cellIndex) => (
+                    <Skeleton key={cellIndex} className="h-10 w-full rounded-lg" />
+                  ))}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Payment History</h1>
-        <p className="text-muted-foreground">View all your submitted payments</p>
-      </div>
-
-      {/* Filters */}
-      <div className="flex gap-3">
+      <div className="grid grid-cols-2 gap-3">
         <Select value={filterMonth} onValueChange={setFilterMonth}>
-          <SelectTrigger className="w-[140px]"><SelectValue placeholder="Month" /></SelectTrigger>
+          <SelectTrigger className="w-full"><SelectValue placeholder="Month" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Months</SelectItem>
             {monthOptions.map((m) => (
@@ -69,7 +95,7 @@ export default function PaymentHistory() {
           </SelectContent>
         </Select>
         <Select value={filterYear} onValueChange={setFilterYear}>
-          <SelectTrigger className="w-[120px]"><SelectValue placeholder="Year" /></SelectTrigger>
+          <SelectTrigger className="w-full"><SelectValue placeholder="Year" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Years</SelectItem>
             {years.map((y) => (

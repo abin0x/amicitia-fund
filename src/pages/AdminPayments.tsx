@@ -51,20 +51,24 @@ export default function AdminPayments() {
   const fetchPayments = async () => {
     const { data } = await supabase.from("payments").select("*").order("created_at", { ascending: false });
     if (data && data.length > 0) {
-      const userIds = [...new Set(data.map(p => p.user_id))];
+      const userIds = [...new Set(data.map((p) => p.user_id))];
       const { data: profiles } = await supabase.from("profiles").select("user_id, name, email").in("user_id", userIds);
-      const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
-      setPayments(data.map(p => ({ ...p, profiles: profileMap.get(p.user_id) || null })) as Payment[]);
+      const profileMap = new Map(profiles?.map((p) => [p.user_id, p]) || []);
+      setPayments(data.map((p) => ({ ...p, profiles: profileMap.get(p.user_id) || null })) as Payment[]);
       return;
     }
     setPayments((data as Payment[]) || []);
   };
 
-  useEffect(() => { fetchPayments(); }, []);
+  useEffect(() => {
+    fetchPayments();
+  }, []);
 
   const handleAction = async (id: string, status: "approved" | "rejected" | "pending") => {
     const updateData: Record<string, unknown> = {
-      status, verified_at: new Date().toISOString(), admin_note: adminNote.trim() || null,
+      status,
+      verified_at: new Date().toISOString(),
+      admin_note: adminNote.trim() || null,
     };
     if (editTxId.trim()) updateData.transaction_id = editTxId.trim();
 
@@ -73,12 +77,9 @@ export default function AdminPayments() {
       toast.error(error.message);
     } else {
       toast.success(`Payment ${status}`);
-
-      // Send email notification (fire and forget)
       supabase.functions.invoke("send-email", {
         body: { type: status, paymentId: id, adminNote: adminNote.trim() || undefined },
       }).catch(() => {});
-
       setSelected(null);
       setAdminNote("");
       fetchPayments();
@@ -87,9 +88,7 @@ export default function AdminPayments() {
 
   const now = new Date();
   const yearOptions = getYearOptionsDesc(now);
-  const monthOptions = yearFilter === "all"
-    ? MONTHS.map((_, i) => i + 1)
-    : getMonthOptionsForYear(Number(yearFilter), now);
+  const monthOptions = yearFilter === "all" ? MONTHS.map((_, i) => i + 1) : getMonthOptionsForYear(Number(yearFilter), now);
 
   useEffect(() => {
     if (monthFilter === "all") return;
@@ -104,63 +103,85 @@ export default function AdminPayments() {
     if (methodFilter !== "all" && p.payment_method !== methodFilter) return false;
     if (monthFilter !== "all" && p.month !== Number(monthFilter)) return false;
     if (yearFilter !== "all" && p.year !== Number(yearFilter)) return false;
-    if (searchName && !p.profiles?.name?.toLowerCase().includes(searchName.toLowerCase()) && !p.profiles?.email?.toLowerCase().includes(searchName.toLowerCase())) return false;
+    if (
+      searchName &&
+      !p.profiles?.name?.toLowerCase().includes(searchName.toLowerCase()) &&
+      !p.profiles?.email?.toLowerCase().includes(searchName.toLowerCase())
+    ) {
+      return false;
+    }
     return true;
   });
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Manage Payments</h1>
-        <p className="text-muted-foreground">Review and approve member payments</p>
+      <div className="rounded-[24px] border border-border/70 bg-card/88 p-4 shadow-[0_16px_38px_rgba(16,24,40,0.08)] backdrop-blur-xl">
+        <div className="space-y-3">
+          <div className="grid grid-cols-4 gap-2">
+            {(["all", "pending", "approved", "rejected"] as const).map((f) => (
+              <Button
+                key={f}
+                variant={filter === f ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFilter(f)}
+                className="h-10 rounded-2xl px-2 text-xs capitalize sm:text-sm"
+              >
+                {f}
+              </Button>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-[110px_110px_150px_minmax(0,1fr)]">
+            <Select value={monthFilter} onValueChange={setMonthFilter}>
+              <SelectTrigger className="h-11 rounded-2xl border-border/70 bg-muted/25 px-4">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Months</SelectItem>
+                {monthOptions.map((m) => (
+                  <SelectItem key={m} value={String(m)}>{MONTHS[m - 1]}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={yearFilter} onValueChange={setYearFilter}>
+              <SelectTrigger className="h-11 rounded-2xl border-border/70 bg-muted/25 px-4">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Years</SelectItem>
+                {yearOptions.map((y) => (
+                  <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={methodFilter} onValueChange={(v) => setMethodFilter(v as any)}>
+              <SelectTrigger className="h-11 rounded-2xl border-border/70 bg-muted/25 px-4">
+                <SelectValue placeholder="Method" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Methods</SelectItem>
+                <SelectItem value="bank">Bank</SelectItem>
+                <SelectItem value="mobile_banking">Mobile Banking</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <div className="relative col-span-2 md:col-span-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search member..."
+                value={searchName}
+                onChange={(e) => setSearchName(e.target.value)}
+                className="h-11 rounded-2xl border-border/70 bg-muted/25 pl-9"
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3 items-end">
-        <div className="flex gap-2">
-          {(["all", "pending", "approved", "rejected"] as const).map((f) => (
-            <Button key={f} variant={filter === f ? "default" : "outline"} size="sm" onClick={() => setFilter(f)} className="capitalize">{f}</Button>
-          ))}
-        </div>
-        <Select value={monthFilter} onValueChange={setMonthFilter}>
-          <SelectTrigger className="w-[120px] h-9"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Months</SelectItem>
-            {monthOptions.map((m) => (
-              <SelectItem key={m} value={String(m)}>{MONTHS[m - 1]}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={yearFilter} onValueChange={setYearFilter}>
-          <SelectTrigger className="w-[100px] h-9"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Years</SelectItem>
-            {yearOptions.map(y => (
-              <SelectItem key={y} value={String(y)}>{y}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={methodFilter} onValueChange={(v) => setMethodFilter(v as any)}>
-          <SelectTrigger className="w-[140px] h-9"><SelectValue placeholder="Method" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Methods</SelectItem>
-            <SelectItem value="bank">Bank</SelectItem>
-            <SelectItem value="mobile_banking">Mobile Banking</SelectItem>
-          </SelectContent>
-        </Select>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search member..."
-            value={searchName}
-            onChange={(e) => setSearchName(e.target.value)}
-            className="pl-9 h-9 w-[200px]"
-          />
-        </div>
-      </div>
-
-      <Card className="shadow-lg border-0 bg-card/80 backdrop-blur">
-        <CardHeader>
+      <Card className="overflow-hidden rounded-[28px] border border-border/70 bg-card/88 shadow-[0_16px_40px_rgba(16,24,40,0.10)] backdrop-blur-xl">
+        <CardHeader className="pb-4">
           <CardTitle className="text-lg">Payments ({filtered.length})</CardTitle>
         </CardHeader>
         <CardContent>
@@ -198,16 +219,18 @@ export default function AdminPayments() {
                     </Badge>
                   </TableCell>
                   <TableCell>৳{p.amount.toLocaleString()}</TableCell>
-                  <TableCell className="font-mono text-xs">
-                    {p.transaction_id || "—"}
-                  </TableCell>
+                  <TableCell className="font-mono text-xs">{p.transaction_id || "—"}</TableCell>
                   <TableCell><StatusBadge status={p.status as any} /></TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="sm" onClick={() => {
-                      setSelected(p);
-                      setEditTxId(p.transaction_id || p.extracted_transaction_id || "");
-                      setAdminNote(p.admin_note || "");
-                    }}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setSelected(p);
+                        setEditTxId(p.transaction_id || p.extracted_transaction_id || "");
+                        setAdminNote(p.admin_note || "");
+                      }}
+                    >
                       <Eye className="h-4 w-4" />
                     </Button>
                   </TableCell>
@@ -215,7 +238,9 @@ export default function AdminPayments() {
               ))}
               {filtered.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-muted-foreground py-8">No payments found</TableCell>
+                  <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
+                    No payments found
+                  </TableCell>
                 </TableRow>
               )}
             </TableBody>
@@ -225,7 +250,9 @@ export default function AdminPayments() {
 
       <Dialog open={!!selected} onOpenChange={() => { setSelected(null); setAdminNote(""); }}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Payment Details</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Payment Details</DialogTitle>
+          </DialogHeader>
           {selected && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3 text-sm">
@@ -236,7 +263,7 @@ export default function AdminPayments() {
                 <div><p className="text-muted-foreground">Type</p><p className="font-medium capitalize">{selected.payment_type || "share"}</p></div>
                 <div><p className="text-muted-foreground">Method</p><p className="font-medium">{selected.payment_method === "mobile_banking" ? "Mobile Banking" : "Bank Transfer"}</p></div>
                 {selected.share_quantity && (
-                  <div><p className="text-muted-foreground">Shares</p><p className="font-medium">{selected.share_quantity} × ৳{(selected.share_price || 4000).toLocaleString()}</p></div>
+                  <div><p className="text-muted-foreground">Shares</p><p className="font-medium">{selected.share_quantity} x ৳{(selected.share_price || 4000).toLocaleString()}</p></div>
                 )}
                 <div><p className="text-muted-foreground">Transaction ID</p><p className="font-mono text-xs">{selected.transaction_id || "—"}</p></div>
                 <div><p className="text-muted-foreground">Status</p><StatusBadge status={selected.status as any} /></div>
@@ -244,11 +271,11 @@ export default function AdminPayments() {
               </div>
               {selected.screenshot_url && (
                 <div>
-                  <p className="text-sm text-muted-foreground mb-2">Screenshot</p>
-                  <a href={selected.screenshot_url} target="_blank" rel="noopener noreferrer">
-                    <img src={selected.screenshot_url} alt="Payment screenshot" className="rounded-lg border w-full cursor-zoom-in hover:opacity-90 transition-opacity" />
-                  </a>
-                  <p className="text-xs text-muted-foreground mt-1 text-center">Click to view full size</p>
+                  <p className="mb-2 text-sm text-muted-foreground">Screenshot</p>
+                  <button type="button" className="w-full" onClick={() => setViewImage(selected.screenshot_url!)}>
+                    <img src={selected.screenshot_url} alt="Payment screenshot" className="w-full rounded-lg border transition-opacity hover:opacity-90" />
+                  </button>
+                  <p className="mt-1 text-center text-xs text-muted-foreground">Click to view full size</p>
                 </div>
               )}
               <div className="space-y-2">
@@ -266,7 +293,7 @@ export default function AdminPayments() {
                 <Button className="flex-1" onClick={() => handleAction(selected.id, "approved")} disabled={selected.status === "approved"}>
                   <CheckCircle className="mr-2 h-4 w-4" /> Approve
                 </Button>
-                <Button variant="outline" className="flex-1" onClick={() => handleAction(selected.id, "pending" as any)} disabled={selected.status === "pending"}>
+                <Button variant="outline" className="flex-1" onClick={() => handleAction(selected.id, "pending")} disabled={selected.status === "pending"}>
                   Pending
                 </Button>
                 <Button variant="destructive" className="flex-1" onClick={() => handleAction(selected.id, "rejected")} disabled={selected.status === "rejected"}>
@@ -278,11 +305,12 @@ export default function AdminPayments() {
         </DialogContent>
       </Dialog>
 
-      {/* Full image viewer */}
       <Dialog open={!!viewImage} onOpenChange={() => setViewImage(null)}>
         <DialogContent className="max-w-4xl max-h-[95vh] p-2">
-          <DialogHeader><DialogTitle>Screenshot</DialogTitle></DialogHeader>
-          {viewImage && <img src={viewImage} alt="Payment screenshot" className="w-full h-auto rounded-lg" />}
+          <DialogHeader>
+            <DialogTitle>Screenshot</DialogTitle>
+          </DialogHeader>
+          {viewImage && <img src={viewImage} alt="Payment screenshot" className="h-auto w-full rounded-lg" />}
         </DialogContent>
       </Dialog>
     </div>

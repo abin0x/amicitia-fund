@@ -1,86 +1,88 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 150 10% 97%;
-    --foreground: 160 30% 10%;
+    --background: 156 22% 96%;
+    --foreground: 160 26% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 160 30% 10%;
+    --card-foreground: 160 26% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 160 30% 10%;
+    --popover-foreground: 160 26% 10%;
 
-    --primary: 160 60% 28%;
+    --primary: 157 67% 29%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 150 15% 92%;
-    --secondary-foreground: 160 30% 15%;
+    --secondary: 151 18% 91%;
+    --secondary-foreground: 160 26% 15%;
 
-    --muted: 150 10% 94%;
-    --muted-foreground: 160 10% 45%;
+    --muted: 156 14% 92%;
+    --muted-foreground: 162 10% 42%;
 
-    --accent: 38 92% 50%;
+    --accent: 40 96% 54%;
     --accent-foreground: 38 92% 15%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 150 12% 88%;
-    --input: 150 12% 88%;
-    --ring: 160 60% 28%;
+    --border: 154 18% 86%;
+    --input: 154 18% 86%;
+    --ring: 157 67% 29%;
 
-    --radius: 0.625rem;
+    --radius: 1rem;
 
-    --sidebar-background: 160 30% 10%;
+    --sidebar-background: 160 28% 11%;
     --sidebar-foreground: 150 15% 85%;
-    --sidebar-primary: 160 60% 45%;
+    --sidebar-primary: 157 58% 47%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 160 25% 18%;
+    --sidebar-accent: 160 21% 18%;
     --sidebar-accent-foreground: 150 15% 90%;
     --sidebar-border: 160 20% 18%;
-    --sidebar-ring: 160 60% 45%;
+    --sidebar-ring: 157 58% 47%;
 
-    --success: 142 71% 45%;
+    --success: 145 62% 42%;
     --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
+    --warning: 40 96% 54%;
     --warning-foreground: 38 92% 15%;
   }
 
   .dark {
-    --background: 160 25% 6%;
-    --foreground: 150 15% 92%;
-    --card: 160 25% 9%;
-    --card-foreground: 150 15% 92%;
-    --popover: 160 25% 9%;
-    --popover-foreground: 150 15% 92%;
-    --primary: 160 60% 45%;
+    --background: 220 35% 9%;
+    --foreground: 214 30% 96%;
+    --card: 220 28% 13%;
+    --card-foreground: 214 30% 96%;
+    --popover: 220 28% 13%;
+    --popover-foreground: 214 30% 96%;
+    --primary: 212 92% 58%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 160 20% 15%;
-    --secondary-foreground: 150 15% 90%;
-    --muted: 160 15% 14%;
-    --muted-foreground: 150 10% 55%;
-    --accent: 38 92% 50%;
-    --accent-foreground: 38 92% 90%;
-    --destructive: 0 62% 30%;
+    --secondary: 220 18% 18%;
+    --secondary-foreground: 214 24% 90%;
+    --muted: 220 18% 17%;
+    --muted-foreground: 215 14% 70%;
+    --accent: 215 84% 62%;
+    --accent-foreground: 220 50% 12%;
+    --destructive: 0 78% 56%;
     --destructive-foreground: 0 0% 100%;
-    --border: 160 15% 18%;
-    --input: 160 15% 18%;
-    --ring: 160 60% 45%;
-    --sidebar-background: 160 30% 6%;
-    --sidebar-foreground: 150 15% 80%;
-    --sidebar-primary: 160 60% 45%;
+    --border: 220 18% 24%;
+    --input: 220 18% 24%;
+    --ring: 212 92% 58%;
+    --sidebar-background: 222 38% 11%;
+    --sidebar-foreground: 214 18% 84%;
+    --sidebar-primary: 212 92% 58%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 160 20% 12%;
-    --sidebar-accent-foreground: 150 15% 85%;
-    --sidebar-border: 160 15% 14%;
-    --sidebar-ring: 160 60% 45%;
-    --success: 142 71% 45%;
+    --sidebar-accent: 222 24% 16%;
+    --sidebar-accent-foreground: 214 20% 90%;
+    --sidebar-border: 222 22% 18%;
+    --sidebar-ring: 212 92% 58%;
+    --success: 160 64% 46%;
     --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 38 92% 15%;
+    --warning: 40 94% 60%;
+    --warning-foreground: 32 92% 14%;
   }
 }
 
@@ -90,6 +92,56 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: 'Manrope', 'Segoe UI', sans-serif;
+    background-image:
+      radial-gradient(circle at top left, rgba(20, 102, 76, 0.08), transparent 28%),
+      radial-gradient(circle at bottom right, rgba(247, 181, 0, 0.09), transparent 22%);
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+
+  .dark body {
+    background-image:
+      radial-gradient(circle at top left, rgba(59, 130, 246, 0.18), transparent 24%),
+      radial-gradient(circle at top right, rgba(96, 165, 250, 0.10), transparent 20%),
+      radial-gradient(circle at bottom right, rgba(37, 99, 235, 0.10), transparent 22%);
+    background-color: #0b1020;
+  }
+}
+
+@layer components {
+  .theme-logo {
+    filter: none;
+    transition: none;
+  }
+
+  .app-shell {
+    background:
+      radial-gradient(circle at top left, rgba(20, 102, 76, 0.08), transparent 26%),
+      radial-gradient(circle at 85% 0%, rgba(247, 181, 0, 0.12), transparent 18%),
+      linear-gradient(180deg, rgba(255,255,255,0.7), rgba(245,249,247,0.94));
+  }
+
+  .dark .app-shell {
+    background:
+      radial-gradient(circle at top left, rgba(59, 130, 246, 0.18), transparent 24%),
+      radial-gradient(circle at 88% 2%, rgba(96, 165, 250, 0.10), transparent 16%),
+      radial-gradient(circle at 78% 100%, rgba(37, 99, 235, 0.10), transparent 22%),
+      linear-gradient(180deg, rgba(11, 16, 32, 0.96), rgba(13, 21, 38, 0.99));
+  }
+
+  .auth-canvas {
+    background:
+      radial-gradient(circle at top left, rgba(20, 102, 76, 0.12), transparent 24%),
+      radial-gradient(circle at right center, rgba(247, 181, 0, 0.12), transparent 22%),
+      linear-gradient(180deg, #f7fbf9 0%, #eef5f1 100%);
+  }
+
+  .dark .auth-canvas {
+    background:
+      radial-gradient(circle at top left, rgba(59, 130, 246, 0.18), transparent 24%),
+      radial-gradient(circle at right center, rgba(96, 165, 250, 0.10), transparent 18%),
+      radial-gradient(circle at bottom right, rgba(37, 99, 235, 0.08), transparent 20%),
+      linear-gradient(180deg, #0b1020 0%, #11192b 100%);
   }
 }

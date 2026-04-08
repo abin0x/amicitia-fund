@@ -18,7 +18,6 @@ import {
   Users,
   ClipboardCheck,
   LogOut,
-  Landmark,
   UserCircle,
   FileBarChart,
   AlertCircle,
@@ -46,21 +45,18 @@ export function AppSidebar() {
   const { viewMode, signOut, user } = useAuth();
 
   return (
-    <Sidebar className="border-r-0">
-      <div className="px-4 py-5 flex items-center gap-3">
-        <div className="w-9 h-9 rounded-lg bg-sidebar-primary flex items-center justify-center">
-          <Landmark className="w-5 h-5 text-sidebar-primary-foreground" />
-        </div>
-        <div className="overflow-hidden">
-          <h2 className="text-sm font-bold text-sidebar-foreground truncate">Amicitia</h2>
-          <p className="text-xs text-sidebar-foreground/50 truncate">{user?.email}</p>
+    <Sidebar className="hidden border-r-0 md:flex md:w-[290px]">
+      <div className="px-5 py-6 flex items-center gap-3">
+        <img src="/amicitia-logo.png" alt="Amicitia logo" className="theme-logo h-12 w-auto max-w-[180px] object-contain" />
+        <div className="min-w-0 overflow-hidden">
+          <p className="text-xs text-sidebar-foreground/60 truncate">{user?.email}</p>
         </div>
       </div>
 
-      <SidebarContent>
+      <SidebarContent className="px-3">
         {(viewMode === "member") && (
-          <SidebarGroup>
-            <SidebarGroupLabel className="text-sidebar-foreground/40 text-[11px] uppercase tracking-wider">
+          <SidebarGroup className="mt-2">
+            <SidebarGroupLabel className="px-3 text-sidebar-foreground/40 text-[11px] uppercase tracking-[0.22em]">
               Member
             </SidebarGroupLabel>
             <SidebarGroupContent>
@@ -71,8 +67,8 @@ export function AppSidebar() {
                       <NavLink
                         to={item.url}
                         end={item.url === "/"}
-                        className="hover:bg-sidebar-accent/60"
-                        activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
+                        className="flex items-center rounded-2xl px-3 py-3 text-sm hover:bg-sidebar-accent/70"
+                        activeClassName="bg-white/10 text-white font-semibold shadow-sm"
                       >
                         <item.icon className="mr-2 h-4 w-4" />
                         <span>{item.title}</span>
@@ -86,8 +82,8 @@ export function AppSidebar() {
         )}
 
         {viewMode === "admin" && (
-          <SidebarGroup>
-            <SidebarGroupLabel className="text-sidebar-foreground/40 text-[11px] uppercase tracking-wider">
+          <SidebarGroup className="mt-2">
+            <SidebarGroupLabel className="px-3 text-sidebar-foreground/40 text-[11px] uppercase tracking-[0.22em]">
               Admin
             </SidebarGroupLabel>
             <SidebarGroupContent>
@@ -98,8 +94,8 @@ export function AppSidebar() {
                       <NavLink
                         to={item.url}
                         end
-                        className="hover:bg-sidebar-accent/60"
-                        activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
+                        className="flex items-center rounded-2xl px-3 py-3 text-sm hover:bg-sidebar-accent/70"
+                        activeClassName="bg-white/10 text-white font-semibold shadow-sm"
                       >
                         <item.icon className="mr-2 h-4 w-4" />
                         <span>{item.title}</span>
@@ -116,7 +112,7 @@ export function AppSidebar() {
       <SidebarFooter className="p-4">
         <Button
           variant="outline"
-          className="h-11 w-full justify-between rounded-lg border-sidebar-border/60 bg-sidebar-accent/30 px-3 text-sidebar-foreground shadow-sm transition-all hover:border-sidebar-primary/40 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground"
+          className="h-12 w-full justify-between rounded-2xl border-sidebar-border/70 bg-white/10 px-4 text-sidebar-foreground shadow-sm transition-all hover:border-sidebar-primary/40 hover:bg-white/15 hover:text-sidebar-foreground"
           onClick={signOut}
         >
           <span className="flex items-center gap-2">
@@ -125,7 +121,7 @@ export function AppSidebar() {
           </span>
           <span className="text-[10px] uppercase tracking-wide text-sidebar-foreground/60">Secure</span>
         </Button>
-        <div className="mt-3 text-center text-[11px] leading-4 text-sidebar-foreground/50">
+        <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center text-[11px] leading-4 text-sidebar-foreground/60">
           <p>&copy; Amicitia. All rights reserved.</p>
           <p>Developed by Obaidur Rahman Humayun</p>
         </div>

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Users, CheckCircle, Clock, XCircle } from "lucide-react";
+import { CheckCircle, Clock, XCircle } from "lucide-react";
 import { getMonthOptionsForYear, getYearOptionsDesc, isPeriodBeforeLaunch } from "@/lib/period";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -102,24 +102,16 @@ export default function TransparencyPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Users className="h-6 w-6 text-primary" />
-          Payment Transparency
-        </h1>
-        <p className="text-muted-foreground text-sm">View all members' payment status</p>
-      </div>
-
-      <div className="flex flex-wrap gap-3">
+      <div className="grid grid-cols-2 gap-3">
         <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-          <SelectTrigger className="w-[130px] h-9"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-10 w-full"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Months</SelectItem>
             {monthOptions.map((m) => <SelectItem key={m} value={String(m)}>{MONTHS[m - 1]}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={selectedYear} onValueChange={setSelectedYear}>
-          <SelectTrigger className="w-[100px] h-9"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-10 w-full"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Years</SelectItem>
             {years.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}

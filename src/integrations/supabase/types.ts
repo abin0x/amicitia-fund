@@ -97,6 +97,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          admin_only: boolean
           created_at: string
           email: string
           email_verified: boolean
@@ -109,6 +110,7 @@ export type Database = {
           verification_token_expires_at: string | null
         }
         Insert: {
+          admin_only?: boolean
           created_at?: string
           email?: string
           email_verified?: boolean
@@ -121,6 +123,7 @@ export type Database = {
           verification_token_expires_at?: string | null
         }
         Update: {
+          admin_only?: boolean
           created_at?: string
           email?: string
           email_verified?: boolean

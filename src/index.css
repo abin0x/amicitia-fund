@@ -5,6 +5,18 @@
 @tailwind utilities;
 
 @layer base {
+  html[data-font-scale="compact"] {
+    font-size: 15px;
+  }
+
+  html[data-font-scale="comfortable"] {
+    font-size: 16px;
+  }
+
+  html[data-font-scale="large"] {
+    font-size: 17px;
+  }
+
   :root {
     --background: 156 22% 96%;
     --foreground: 160 26% 10%;
@@ -84,6 +96,76 @@
     --warning: 40 94% 60%;
     --warning-foreground: 32 92% 14%;
   }
+
+  :root[data-color-theme="emerald"] {
+    --primary: 157 67% 29%;
+    --ring: 157 67% 29%;
+    --accent: 40 96% 54%;
+    --sidebar-primary: 157 58% 47%;
+  }
+
+  :root[data-color-theme="ocean"] {
+    --primary: 205 88% 46%;
+    --ring: 205 88% 46%;
+    --accent: 191 92% 47%;
+    --sidebar-primary: 205 84% 58%;
+  }
+
+  :root[data-color-theme="rose"] {
+    --primary: 346 77% 49%;
+    --ring: 346 77% 49%;
+    --accent: 18 95% 58%;
+    --sidebar-primary: 346 74% 58%;
+  }
+
+  :root[data-color-theme="amber"] {
+    --primary: 32 95% 44%;
+    --ring: 32 95% 44%;
+    --accent: 47 96% 53%;
+    --sidebar-primary: 32 90% 56%;
+  }
+
+  :root[data-color-theme="violet"] {
+    --primary: 262 83% 58%;
+    --ring: 262 83% 58%;
+    --accent: 283 89% 64%;
+    --sidebar-primary: 262 88% 66%;
+  }
+
+  .dark[data-color-theme="emerald"] {
+    --primary: 160 78% 44%;
+    --ring: 160 78% 44%;
+    --accent: 43 96% 58%;
+    --sidebar-primary: 160 78% 44%;
+  }
+
+  .dark[data-color-theme="ocean"] {
+    --primary: 201 92% 59%;
+    --ring: 201 92% 59%;
+    --accent: 190 90% 56%;
+    --sidebar-primary: 201 92% 59%;
+  }
+
+  .dark[data-color-theme="rose"] {
+    --primary: 346 84% 62%;
+    --ring: 346 84% 62%;
+    --accent: 14 92% 61%;
+    --sidebar-primary: 346 84% 62%;
+  }
+
+  .dark[data-color-theme="amber"] {
+    --primary: 38 92% 56%;
+    --ring: 38 92% 56%;
+    --accent: 48 96% 58%;
+    --sidebar-primary: 38 92% 56%;
+  }
+
+  .dark[data-color-theme="violet"] {
+    --primary: 263 88% 66%;
+    --ring: 263 88% 66%;
+    --accent: 282 87% 70%;
+    --sidebar-primary: 263 88% 66%;
+  }
 }
 
 @layer base {
@@ -94,17 +176,17 @@
     @apply bg-background text-foreground;
     font-family: 'Manrope', 'Segoe UI', sans-serif;
     background-image:
-      radial-gradient(circle at top left, rgba(20, 102, 76, 0.08), transparent 28%),
-      radial-gradient(circle at bottom right, rgba(247, 181, 0, 0.09), transparent 22%);
+      radial-gradient(circle at top left, hsl(var(--primary) / 0.08), transparent 28%),
+      radial-gradient(circle at bottom right, hsl(var(--accent) / 0.10), transparent 22%);
     background-attachment: fixed;
     min-height: 100vh;
   }
 
   .dark body {
     background-image:
-      radial-gradient(circle at top left, rgba(59, 130, 246, 0.18), transparent 24%),
-      radial-gradient(circle at top right, rgba(96, 165, 250, 0.10), transparent 20%),
-      radial-gradient(circle at bottom right, rgba(37, 99, 235, 0.10), transparent 22%);
+      radial-gradient(circle at top left, hsl(var(--primary) / 0.18), transparent 24%),
+      radial-gradient(circle at top right, hsl(var(--accent) / 0.10), transparent 20%),
+      radial-gradient(circle at bottom right, hsl(var(--primary) / 0.10), transparent 22%);
     background-color: #0b1020;
   }
 }
@@ -117,31 +199,31 @@
 
   .app-shell {
     background:
-      radial-gradient(circle at top left, rgba(20, 102, 76, 0.08), transparent 26%),
-      radial-gradient(circle at 85% 0%, rgba(247, 181, 0, 0.12), transparent 18%),
+      radial-gradient(circle at top left, hsl(var(--primary) / 0.08), transparent 26%),
+      radial-gradient(circle at 85% 0%, hsl(var(--accent) / 0.12), transparent 18%),
       linear-gradient(180deg, rgba(255,255,255,0.7), rgba(245,249,247,0.94));
   }
 
   .dark .app-shell {
     background:
-      radial-gradient(circle at top left, rgba(59, 130, 246, 0.18), transparent 24%),
-      radial-gradient(circle at 88% 2%, rgba(96, 165, 250, 0.10), transparent 16%),
-      radial-gradient(circle at 78% 100%, rgba(37, 99, 235, 0.10), transparent 22%),
+      radial-gradient(circle at top left, hsl(var(--primary) / 0.18), transparent 24%),
+      radial-gradient(circle at 88% 2%, hsl(var(--accent) / 0.10), transparent 16%),
+      radial-gradient(circle at 78% 100%, hsl(var(--primary) / 0.10), transparent 22%),
       linear-gradient(180deg, rgba(11, 16, 32, 0.96), rgba(13, 21, 38, 0.99));
   }
 
   .auth-canvas {
     background:
-      radial-gradient(circle at top left, rgba(20, 102, 76, 0.12), transparent 24%),
-      radial-gradient(circle at right center, rgba(247, 181, 0, 0.12), transparent 22%),
+      radial-gradient(circle at top left, hsl(var(--primary) / 0.12), transparent 24%),
+      radial-gradient(circle at right center, hsl(var(--accent) / 0.12), transparent 22%),
       linear-gradient(180deg, #f7fbf9 0%, #eef5f1 100%);
   }
 
   .dark .auth-canvas {
     background:
-      radial-gradient(circle at top left, rgba(59, 130, 246, 0.18), transparent 24%),
-      radial-gradient(circle at right center, rgba(96, 165, 250, 0.10), transparent 18%),
-      radial-gradient(circle at bottom right, rgba(37, 99, 235, 0.08), transparent 20%),
+      radial-gradient(circle at top left, hsl(var(--primary) / 0.18), transparent 24%),
+      radial-gradient(circle at right center, hsl(var(--accent) / 0.10), transparent 18%),
+      radial-gradient(circle at bottom right, hsl(var(--primary) / 0.08), transparent 20%),
       linear-gradient(180deg, #0b1020 0%, #11192b 100%);
   }
 }

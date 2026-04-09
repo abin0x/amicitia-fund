@@ -25,6 +25,8 @@ import NotFound from "./pages/NotFound";
 import VerifyEmailPage from "./pages/VerifyEmailPage";
 import SplashScreen from "@/components/SplashScreen";
 import OnboardingScreen from "@/components/OnboardingScreen";
+import PushNotificationManager from "@/components/PushNotificationManager";
+import NotificationsPage from "./pages/NotificationsPage";
 
 const queryClient = new QueryClient();
 const ONBOARDING_STORAGE_KEY = "amicitia_onboarding_seen";
@@ -66,12 +68,14 @@ const App = () => {
         {!showSplash && showOnboarding && <OnboardingScreen onFinish={handleFinishOnboarding} />}
         <BrowserRouter>
           <AuthProvider>
+            <PushNotificationManager />
             <Routes>
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/admin/auth" element={<AdminAuthPage />} />
               <Route path="/verify-email" element={<VerifyEmailPage />} />
               <Route path="/" element={<ProtectedPage><ViewModeRedirect><MemberDashboard /></ViewModeRedirect></ProtectedPage>} />
               <Route path="/profile" element={<ProtectedRoute><AppLayout><ProfilePage /></AppLayout></ProtectedRoute>} />
+              <Route path="/notifications" element={<ProtectedPage><NotificationsPage /></ProtectedPage>} />
               <Route path="/submit-payment" element={<ProtectedPage><SubmitPayment /></ProtectedPage>} />
               <Route path="/payment-history" element={<ProtectedPage><PaymentHistory /></ProtectedPage>} />
               <Route path="/admin" element={<ProtectedPage><AdminDashboard /></ProtectedPage>} />

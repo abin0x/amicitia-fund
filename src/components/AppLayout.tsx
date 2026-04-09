@@ -1,18 +1,21 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
-import ThemeToggle from "@/components/ThemeToggle";
 import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeftRight, ChevronRight, Sparkles, UserRound } from "lucide-react";
+import { ArrowLeftRight, Bell, ChevronRight, Sparkles, UserRound } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { subscribeToNotificationsChanged } from "@/lib/notifications";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const { role, viewMode, canAccessMemberView, toggleViewMode } = useAuth();
+  const { role, viewMode, canAccessMemberView, toggleViewMode, user } = useAuth();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const handleViewModeToggle = () => {
     const nextMode = viewMode === "admin" ? "member" : "admin";
@@ -20,13 +23,48 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     navigate(nextMode === "admin" ? "/admin" : "/", { replace: true });
   };
 
+  useEffect(() => {
+    if (!user) {
+      setUnreadCount(0);
+      return;
+    }
+
+    let mounted = true;
+
+    const fetchUnreadCount = async () => {
+      const { count } = await supabase
+        .from("notifications")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("is_read", false);
+
+      if (mounted) {
+        setUnreadCount(count || 0);
+      }
+    };
+
+    fetchUnreadCount().catch(console.error);
+    const unsubscribe = subscribeToNotificationsChanged(() => {
+      fetchUnreadCount().catch(console.error);
+    });
+    const interval = window.setInterval(() => {
+      fetchUnreadCount().catch(console.error);
+    }, 45000);
+
+    return () => {
+      mounted = false;
+      unsubscribe();
+      window.clearInterval(interval);
+    };
+  }, [user]);
+
   return (
     <SidebarProvider>
       <div className="app-shell min-h-screen w-full">
         <AppSidebar />
         <main className="flex min-h-screen flex-1 flex-col">
           <header className="sticky top-0 z-30 border-b border-border/50 bg-background/70 backdrop-blur-2xl">
-            <div className="mx-auto w-full max-w-6xl px-4 pb-4 pt-4 md:px-6">
+            <div className="mx-auto w-full max-w-6xl px-4 pb-3 pt-3 md:px-6">
               <div className="flex items-start justify-between gap-4 rounded-[28px] border border-slate-200/70 bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.10),transparent_24%),linear-gradient(145deg,rgba(255,255,255,0.96),rgba(248,250,252,0.92))] px-4 py-4 shadow-[0_16px_40px_rgba(15,23,42,0.06)] dark:border-slate-800/80 dark:bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.10),transparent_24%),linear-gradient(145deg,rgba(15,23,42,0.96),rgba(17,24,39,0.94))] md:px-5">
                 <div className="flex items-center gap-3">
                   <div className="md:hidden">
@@ -57,7 +95,19 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 </div>
 
                 <div className="flex items-center gap-2 md:gap-3">
-                  <ThemeToggle className="h-11 w-11 rounded-2xl border-border/70 bg-card/80 shadow-sm" />
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    onClick={() => navigate("/notifications")}
+                    className="relative h-11 w-11 rounded-2xl border-border/70 bg-card/80 shadow-sm"
+                  >
+                    <Bell className="h-4 w-4" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -right-1 -top-1 min-w-[20px] rounded-full bg-destructive px-1.5 py-0.5 text-[10px] font-bold text-destructive-foreground">
+                        {unreadCount > 99 ? "99+" : unreadCount}
+                      </span>
+                    )}
+                  </Button>
                   {role === "admin" && !canAccessMemberView && (
                     <Button
                       size={isMobile ? "icon" : "sm"}
@@ -90,7 +140,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
           </header>
 
-          <div className="mx-auto flex w-full max-w-6xl flex-1 px-4 pb-28 pt-5 md:px-6 md:pb-8 md:pt-6">
+          <div className="mx-auto flex w-full max-w-6xl flex-1 px-4 pb-28 pt-4 md:px-6 md:pb-8 md:pt-5">
             <div className="w-full">{children}</div>
           </div>
         </main>

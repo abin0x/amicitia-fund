@@ -182,7 +182,7 @@ export default function SubmitPayment() {
 
     setSubmitting(true);
 
-    const { error } = await supabase.from("payments").insert({
+    const { data: insertedPayment, error } = await supabase.from("payments").insert({
       user_id: user.id,
       amount: totalAmount,
       month: parseInt(month),
@@ -192,19 +192,19 @@ export default function SubmitPayment() {
       share_price: paymentType === "share" ? sharePrice : null,
       payment_type: paymentType,
       payment_method: paymentMethod,
-    });
+    }).select("id").single();
 
     if (error) {
       if (error.code === "23505") toast.error("Payment for this month has already been made.");
       else toast.error(error.message);
     } else {
       toast.success("Payment submitted successfully!");
-      const { data: insertedPayments } = await supabase
-        .from("payments").select("id").eq("user_id", user.id)
-        .order("created_at", { ascending: false }).limit(1);
-      if (insertedPayments?.[0]) {
+      if (insertedPayment?.id) {
         supabase.functions.invoke("send-email", {
-          body: { type: "submission", paymentId: insertedPayments[0].id },
+          body: { type: "submission", paymentId: insertedPayment.id },
+        }).catch(() => {});
+        supabase.functions.invoke("send-push-notification", {
+          body: { eventType: "payment_submitted", paymentId: insertedPayment.id },
         }).catch(() => {});
       }
       setTransactionId("");

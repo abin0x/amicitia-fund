@@ -7,6 +7,11 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+.env
+.env.*
+.local
+
+
 node_modules
 dist
 dist-ssr
@@ -29,4 +34,5 @@ android/.gradle/
 android/local.properties
 android/captures/
 android/keystore.properties
+android/app/google-services.json
 keystore/

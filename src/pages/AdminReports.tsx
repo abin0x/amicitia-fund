@@ -15,7 +15,6 @@ import html2canvas from "html2canvas";
 import { getMonthOptionsForYear, getYearOptionsDesc, isPeriodBeforeLaunch } from "@/lib/period";
 import { Capacitor } from "@capacitor/core";
 import { Directory, Filesystem } from "@capacitor/filesystem";
-import { Share } from "@capacitor/share";
 import { toast } from "sonner";
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -58,6 +57,45 @@ const triggerBrowserDownload = (blob: Blob, fileName: string) => {
   anchor.download = fileName;
   anchor.click();
   URL.revokeObjectURL(url);
+};
+
+const REPORTS_DIRECTORY = "Amicitia";
+
+const ensureNativeDocumentsAccess = async () => {
+  const current = await Filesystem.checkPermissions();
+  if (current.publicStorage === "granted") {
+    return;
+  }
+
+  const requested = await Filesystem.requestPermissions();
+  if (requested.publicStorage !== "granted") {
+    throw new Error("Storage permission is required to save reports.");
+  }
+};
+
+const saveBlobToNativeDocuments = async (blob: Blob, fileName: string) => {
+  await ensureNativeDocumentsAccess();
+
+  const base64Data = await blobToBase64(blob);
+  const targetPath = `${REPORTS_DIRECTORY}/${fileName}`;
+
+  await Filesystem.mkdir({
+    path: REPORTS_DIRECTORY,
+    directory: Directory.Documents,
+    recursive: true,
+  }).catch(() => {});
+
+  const savedFile = await Filesystem.writeFile({
+    path: targetPath,
+    data: base64Data,
+    directory: Directory.Documents,
+    recursive: true,
+  });
+
+  return {
+    uri: savedFile.uri,
+    displayPath: `Documents/${REPORTS_DIRECTORY}/${fileName}`,
+  };
 };
 
 export default function AdminReports() {
@@ -158,7 +196,22 @@ export default function AdminReports() {
     ]);
     const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
-    triggerBrowserDownload(blob, getSafeReportFileName(getTitle(), "csv"));
+    const fileName = getSafeReportFileName(getTitle(), "csv");
+
+    if (Capacitor.isNativePlatform()) {
+      void saveBlobToNativeDocuments(blob, fileName)
+        .then(({ displayPath }) => {
+          toast.success(`CSV saved to ${displayPath}`);
+        })
+        .catch((error) => {
+          console.error("CSV export error:", error);
+          toast.error(error instanceof Error ? error.message : "Failed to save CSV.");
+        });
+      return;
+    }
+
+    triggerBrowserDownload(blob, fileName);
+    toast.success("CSV downloaded successfully.");
   };
 
   const exportPDF = async () => {
@@ -334,25 +387,8 @@ export default function AdminReports() {
       const pdfBlob = pdf.output("blob");
 
       if (Capacitor.isNativePlatform()) {
-        const base64Data = await blobToBase64(pdfBlob);
-        const savedFile = await Filesystem.writeFile({
-          path: fileName,
-          data: base64Data,
-          directory: Directory.Documents,
-          recursive: true,
-        });
-
-        const shareAvailability = await Share.canShare();
-        if (shareAvailability.value) {
-          await Share.share({
-            title: getTitle(),
-            text: `${getTitle()} PDF report`,
-            url: savedFile.uri,
-            dialogTitle: "Share report",
-          });
-        }
-
-        toast.success("PDF saved successfully.");
+        const { displayPath } = await saveBlobToNativeDocuments(pdfBlob, fileName);
+        toast.success(`PDF saved to ${displayPath}`);
       } else {
         triggerBrowserDownload(pdfBlob, fileName);
         toast.success("PDF downloaded successfully.");
@@ -483,7 +519,7 @@ export default function AdminReports() {
               </Button>
               <Button size="sm" variant="outline" onClick={exportPDF} disabled={exportingPdf} className="rounded-2xl">
                 {exportingPdf ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <FileDown className="mr-1.5 h-4 w-4" />}
-                {Capacitor.isNativePlatform() ? "PDF / Share" : "PDF"}
+                {Capacitor.isNativePlatform() ? "Save PDF" : "PDF"}
               </Button>
             </div>
           </CardHeader>

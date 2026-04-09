@@ -22,6 +22,7 @@ import {
   FileBarChart,
   AlertCircle,
   Eye,
+  Bell,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -29,6 +30,7 @@ const memberItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Submit Payment", url: "/submit-payment", icon: CreditCard },
   { title: "Payment History", url: "/payment-history", icon: History },
+  { title: "Notifications", url: "/notifications", icon: Bell },
   { title: "Profile", url: "/profile", icon: UserCircle },
   { title: "Transparency", url: "/transparency", icon: Eye },
 ];
@@ -37,6 +39,7 @@ const adminItems = [
   { title: "Admin Dashboard", url: "/admin", icon: LayoutDashboard },
   { title: "Manage Payments", url: "/admin/payments", icon: ClipboardCheck },
   { title: "Pending Payments", url: "/admin/pending", icon: AlertCircle },
+  { title: "Notifications", url: "/notifications", icon: Bell },
   { title: "Members", url: "/admin/members", icon: Users },
   { title: "Reports", url: "/admin/reports", icon: FileBarChart },
 ];

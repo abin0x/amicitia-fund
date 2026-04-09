@@ -319,47 +319,44 @@ export default function AuthPage() {
               <ThemeToggle className="h-10 w-10 rounded-2xl border-border/70 bg-card/80 shadow-sm" />
             </div>
             <div className="flex flex-col items-center text-center">
-              <div className="flex min-h-[64px] w-full items-center justify-center rounded-[22px] border border-border/60 bg-card/95 px-4 shadow-[0_12px_28px_rgba(16,24,40,0.08)]">
-                <img src="/amicitia-logo.png" alt="Amicitia logo" className="theme-logo h-10 w-auto max-w-full object-contain" />
+              <div className="flex min-h-[92px] w-full items-center justify-center px-4">
+                <img src="/amicitia-logo.png" alt="Amicitia logo" className="theme-logo h-20 w-auto max-w-full object-contain" />
               </div>
-              <div className="mt-3 min-w-0">
-                <h1 className="text-[1.75rem] font-extrabold tracking-tight text-foreground">Amicitia</h1>
-                <p className="mt-1 text-[13px] text-muted-foreground">
-                  Secure member access for payments and account activity
-                </p>
-              </div>
+              <div className="mt-3 min-w-0" />
             </div>
 
-            <div className="grid grid-cols-2 rounded-[18px] border border-border/70 bg-muted/45 p-1">
-              <button
-                type="button"
-                onClick={() => {
-                  setIsLogin(true);
-                  setForgotPasswordMode(false);
-                  setPassword("");
-                  resetOtpState();
-                }}
-                className={`rounded-[14px] px-4 py-2 text-sm font-semibold transition-colors ${
-                  isLogin ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
-                }`}
-              >
-                Sign In
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsLogin(false);
-                  setForgotPasswordMode(false);
-                  setPassword("");
-                  resetOtpState();
-                }}
-                className={`rounded-[14px] px-4 py-2 text-sm font-semibold transition-colors ${
-                  !isLogin ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
-                }`}
-              >
-                Create Account
-              </button>
-            </div>
+            {!forgotPasswordMode && (
+              <div className="grid grid-cols-2 rounded-[18px] border border-border/70 bg-muted/45 p-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsLogin(true);
+                    setForgotPasswordMode(false);
+                    setPassword("");
+                    resetOtpState();
+                  }}
+                  className={`rounded-[14px] px-4 py-2 text-sm font-semibold transition-colors ${
+                    isLogin ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
+                  }`}
+                >
+                  Sign In
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsLogin(false);
+                    setForgotPasswordMode(false);
+                    setPassword("");
+                    resetOtpState();
+                  }}
+                  className={`rounded-[14px] px-4 py-2 text-sm font-semibold transition-colors ${
+                    !isLogin ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"
+                  }`}
+                >
+                  Create Account
+                </button>
+              </div>
+            )}
 
             <div>
               <CardTitle className="text-center text-[1.55rem] font-extrabold tracking-tight">
@@ -367,7 +364,7 @@ export default function AuthPage() {
                   ? "Verify Your Account"
                   : forgotPasswordMode
                     ? forgotPasswordStep === "request"
-                      ? "Reset your password"
+                      ? "Forgot your password"
                       : "Verify reset OTP"
                     : isLogin
                       ? "Welcome back"

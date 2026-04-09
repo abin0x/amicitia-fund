@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -37,16 +38,23 @@ type Payment = {
 };
 
 export default function AdminPayments() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [selected, setSelected] = useState<Payment | null>(null);
   const [editTxId, setEditTxId] = useState("");
   const [adminNote, setAdminNote] = useState("");
   const [filter, setFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
   const [methodFilter, setMethodFilter] = useState<"all" | "bank" | "mobile_banking">("all");
-  const [monthFilter, setMonthFilter] = useState<string>(String(new Date().getMonth() + 1));
+  const [monthFilter, setMonthFilter] = useState<string>("all");
   const [yearFilter, setYearFilter] = useState<string>(String(new Date().getFullYear()));
   const [searchName, setSearchName] = useState("");
   const [viewImage, setViewImage] = useState<string | null>(null);
+
+  const openPaymentDetails = (payment: Payment) => {
+    setSelected(payment);
+    setEditTxId(payment.transaction_id || payment.extracted_transaction_id || "");
+    setAdminNote(payment.admin_note || "");
+  };
 
   const fetchPayments = async () => {
     const { data } = await supabase.from("payments").select("*").order("created_at", { ascending: false });
@@ -64,6 +72,18 @@ export default function AdminPayments() {
     fetchPayments();
   }, []);
 
+  useEffect(() => {
+    const paymentId = searchParams.get("paymentId");
+    if (!paymentId || payments.length === 0) {
+      return;
+    }
+
+    const payment = payments.find((item) => item.id === paymentId);
+    if (payment) {
+      openPaymentDetails(payment);
+    }
+  }, [payments, searchParams]);
+
   const handleAction = async (id: string, status: "approved" | "rejected" | "pending") => {
     const updateData: Record<string, unknown> = {
       status,
@@ -80,6 +100,11 @@ export default function AdminPayments() {
       supabase.functions.invoke("send-email", {
         body: { type: status, paymentId: id, adminNote: adminNote.trim() || undefined },
       }).catch(() => {});
+      supabase.functions.invoke("send-push-notification", {
+        body: { eventType: "payment_status", paymentId: id, status, adminNote: adminNote.trim() || undefined },
+      }).catch((invokeError) => {
+        console.error("Push notification trigger failed:", invokeError);
+      });
       setSelected(null);
       setAdminNote("");
       fetchPayments();
@@ -190,11 +215,11 @@ export default function AdminPayments() {
               <TableRow>
                 <TableHead>Member</TableHead>
                 <TableHead>Period</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Method</TableHead>
                 <TableHead>Amount</TableHead>
                 <TableHead>Transaction ID</TableHead>
-                <TableHead>Status</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -208,6 +233,7 @@ export default function AdminPayments() {
                     </div>
                   </TableCell>
                   <TableCell>{MONTHS[p.month - 1]} {p.year}</TableCell>
+                  <TableCell><StatusBadge status={p.status as any} /></TableCell>
                   <TableCell>
                     <Badge variant="outline" className="text-xs capitalize">
                       {p.payment_type || "share"}{p.share_quantity ? ` (${p.share_quantity})` : ""}
@@ -220,16 +246,11 @@ export default function AdminPayments() {
                   </TableCell>
                   <TableCell>৳{p.amount.toLocaleString()}</TableCell>
                   <TableCell className="font-mono text-xs">{p.transaction_id || "—"}</TableCell>
-                  <TableCell><StatusBadge status={p.status as any} /></TableCell>
                   <TableCell>
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => {
-                        setSelected(p);
-                        setEditTxId(p.transaction_id || p.extracted_transaction_id || "");
-                        setAdminNote(p.admin_note || "");
-                      }}
+                      onClick={() => openPaymentDetails(p)}
                     >
                       <Eye className="h-4 w-4" />
                     </Button>
@@ -248,7 +269,23 @@ export default function AdminPayments() {
         </CardContent>
       </Card>
 
-      <Dialog open={!!selected} onOpenChange={() => { setSelected(null); setAdminNote(""); }}>
+      <Dialog
+        open={!!selected}
+        onOpenChange={(open) => {
+          if (open) {
+            return;
+          }
+
+          setSelected(null);
+          setAdminNote("");
+
+          if (searchParams.has("paymentId")) {
+            const nextParams = new URLSearchParams(searchParams);
+            nextParams.delete("paymentId");
+            setSearchParams(nextParams, { replace: true });
+          }
+        }}
+      >
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Payment Details</DialogTitle>

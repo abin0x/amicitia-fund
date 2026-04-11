@@ -6,9 +6,9 @@ export default function SplashScreen() {
 
       <div className="relative flex min-h-screen flex-col items-center justify-center px-8 text-center">
         <img
-          src="/amicitia-logo.png"
-          alt="Amicitia logo"
-          className="theme-logo mb-6 h-20 w-auto max-w-[320px] animate-[pulse_2.4s_ease-in-out_infinite] object-contain"
+          src="/app-icon.png"
+          alt="Amicitia app icon"
+          className="mb-6 h-24 w-24 animate-[pulse_2.4s_ease-in-out_infinite] rounded-[28px] object-contain shadow-[0_20px_40px_rgba(15,23,42,0.18)]"
         />
 
         <div className="space-y-2">

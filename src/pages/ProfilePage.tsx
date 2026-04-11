@@ -59,7 +59,7 @@ type ReportSummary = {
 const toDateInputValue = (date: Date) => format(date, "yyyy-MM-dd");
 const startOfDay = (value: string) => new Date(`${value}T00:00:00`);
 const endOfDay = (value: string) => new Date(`${value}T23:59:59`);
-const REPORT_PDF_LOGO_SRC = `${window.location.origin}/report-page-logo.png`;
+const REPORT_PDF_LOGO_SRC = `${window.location.origin}/Download/Whisk_a465b97bea474818dec4581bfbfd66d8dr-removebg-preview.png`;
 
 const getReportPdfLogoDataUrl = async () => {
   try {
@@ -434,46 +434,115 @@ export default function ProfilePage() {
       reportNode.style.background = "#ffffff";
       reportNode.style.color = "#0f172a";
       reportNode.style.padding = "40px";
+      const generatedAt = format(new Date(), "dd MMM yyyy, hh:mm a");
+      const filteredRange = reportSummary.title.replace(/\s+My Report$/, "");
+      const approvalRate = reportSummary.payments.length > 0
+        ? Math.round((reportSummary.approved / reportSummary.payments.length) * 100)
+        : 0;
+      const statusPill = (status: PaymentRecord["status"]) => {
+        if (status === "approved") {
+          return "background:#dcfce7;color:#166534;border:1px solid #86efac;";
+        }
+        if (status === "pending") {
+          return "background:#fef3c7;color:#92400e;border:1px solid #fcd34d;";
+        }
+        return "background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;";
+      };
       reportNode.innerHTML = `
         <div style="font-family:Arial,sans-serif;">
-          <div style="display:flex;justify-content:center;margin-bottom:18px;">
-            <img src="${logoSrc}" alt="Amicitia logo" style="height:92px;width:auto;object-fit:contain;background:transparent;" />
+          <div style="position:relative;border:1px solid #d7dee8;border-radius:10px;background:#ffffff;padding:26px 30px 28px 42px;box-shadow:0 24px 48px rgba(15,23,42,0.10);overflow:hidden;">
+            <div style="position:absolute;left:0;top:0;height:132px;width:18px;background:#7a88d6;"></div>
+            <div style="position:absolute;left:0;bottom:48px;height:120px;width:18px;background:#d8defc;"></div>
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:18px;">
+              <div>
+                <p style="margin:0;font-size:12px;color:#94a3b8;">Amicitia Member Report</p>
+                <h1 style="margin:8px 0 0;font-size:34px;line-height:1.15;font-weight:800;color:#111827;">${filteredRange}</h1>
+                <div style="margin-top:10px;height:4px;width:72px;border-radius:999px;background:linear-gradient(90deg,#8b5cf6,#60a5fa);"></div>
+                <p style="margin:12px 0 0;font-size:12px;line-height:1.6;color:#64748b;">Generated on ${generatedAt}</p>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:center;min-width:300px;min-height:180px;border:1px solid #e5e7eb;border-radius:14px;background:#ffffff;">
+                <img src="${logoSrc}" alt="Amicitia logo" style="height:168px;width:auto;object-fit:contain;" />
+              </div>
+            </div>
           </div>
-          <h1 style="margin:0;font-size:28px;">${reportSummary.title}</h1>
-          <p style="margin:8px 0 20px;color:#475569;">${name || "Member"} | ${email}</p>
-          <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:20px;">
-            <div style="border:1px solid #bbf7d0;background:#ecfdf5;border-radius:14px;padding:14px;"><p style="margin:0;font-size:12px;">Collected</p><p style="margin:8px 0 0;font-size:22px;font-weight:800;">BDT ${reportSummary.totalAmount.toLocaleString()}</p></div>
-            <div style="border:1px solid #bfdbfe;background:#eff6ff;border-radius:14px;padding:14px;"><p style="margin:0;font-size:12px;">Approved</p><p style="margin:8px 0 0;font-size:22px;font-weight:800;">${reportSummary.approved}</p></div>
-            <div style="border:1px solid #fde68a;background:#fffbeb;border-radius:14px;padding:14px;"><p style="margin:0;font-size:12px;">Pending</p><p style="margin:8px 0 0;font-size:22px;font-weight:800;">${reportSummary.pending}</p></div>
-            <div style="border:1px solid #fee2e2;background:#fef2f2;border-radius:14px;padding:14px;"><p style="margin:0;font-size:12px;">Rejected</p><p style="margin:8px 0 0;font-size:22px;font-weight:800;">${reportSummary.rejected}</p></div>
-            <div style="border:1px solid #cbd5e1;background:#f8fafc;border-radius:14px;padding:14px;"><p style="margin:0;font-size:12px;">Shares</p><p style="margin:8px 0 0;font-size:22px;font-weight:800;">${reportSummary.shares}</p></div>
+          <div style="margin-top:22px;">
+            <p style="margin:0 0 14px;font-size:14px;font-weight:800;letter-spacing:0.03em;text-transform:uppercase;color:#111827;">Summary</p>
+            <div style="display:grid;grid-template-columns:1.18fr 0.82fr;gap:16px;">
+              <div style="border-radius:16px;padding:18px 20px;background:linear-gradient(135deg,#5f74bf,#4963af);color:#ffffff;box-shadow:0 12px 28px rgba(68,93,169,0.18);min-height:138px;">
+                <p style="margin:0;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.82);">Total Shares</p>
+                <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-top:18px;">
+                  <p style="margin:0;font-size:20px;font-weight:800;">BDT ${reportSummary.totalAmount.toLocaleString()}</p>
+                  <p style="margin:0;font-size:34px;font-weight:800;line-height:1;">${reportSummary.shares}</p>
+                </div>
+                <div style="margin-top:18px;display:grid;gap:8px;font-size:12px;color:rgba(255,255,255,0.92);">
+                  <div style="display:flex;justify-content:space-between;border-top:1px solid rgba(255,255,255,0.18);padding-top:8px;"><span>Approved</span><strong>${reportSummary.approved}</strong></div>
+                  <div style="display:flex;justify-content:space-between;"><span>Average</span><strong>BDT ${reportSummary.approved > 0 ? Math.round(reportSummary.totalAmount / reportSummary.approved).toLocaleString() : "0"}</strong></div>
+                </div>
+              </div>
+              <div style="display:grid;align-content:start;gap:10px;">
+                <div style="border-radius:12px;background:#f3f4f6;padding:16px 18px;min-height:64px;">
+                  <p style="margin:0;font-size:12px;color:#6b7280;">Approval Rate</p>
+                  <p style="margin:10px 0 0;font-size:22px;font-weight:800;color:#111827;">${approvalRate}%</p>
+                </div>
+                <div style="border-radius:12px;background:#f3f4f6;padding:16px 18px;min-height:64px;">
+                  <p style="margin:0;font-size:12px;color:#6b7280;">Pending / Rejected</p>
+                  <p style="margin:10px 0 0;font-size:22px;font-weight:800;color:#111827;">${reportSummary.pending} / ${reportSummary.rejected}</p>
+                </div>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px;">
+              <div style="border-radius:12px;background:#f3f4f6;padding:14px 16px;">
+                <p style="margin:0 0 10px;font-size:13px;font-weight:800;color:#111827;">Member</p>
+                <div style="display:grid;gap:8px;font-size:12px;color:#374151;">
+                  <div style="display:flex;justify-content:space-between;border-bottom:1px solid #d1d5db;padding-bottom:6px;"><span>Name</span><strong>${name || "Member"}</strong></div>
+                  <div style="display:flex;justify-content:space-between;border-bottom:1px solid #d1d5db;padding-bottom:6px;"><span>Email</span><strong>${email}</strong></div>
+                  <div style="display:flex;justify-content:space-between;"><span>Mobile</span><strong>${mobile || "-"}</strong></div>
+                </div>
+              </div>
+              <div style="border-radius:12px;background:#f3f4f6;padding:14px 16px;">
+                <p style="margin:0 0 10px;font-size:13px;font-weight:800;color:#111827;">Range</p>
+                <div style="display:grid;gap:8px;font-size:12px;color:#374151;">
+                  <div style="display:flex;justify-content:space-between;border-bottom:1px solid #d1d5db;padding-bottom:6px;"><span>Filter</span><strong>${filteredRange}</strong></div>
+                  <div style="display:flex;justify-content:space-between;border-bottom:1px solid #d1d5db;padding-bottom:6px;"><span>Total Entries</span><strong>${reportSummary.payments.length}</strong></div>
+                  <div style="display:flex;justify-content:space-between;"><span>Status Mix</span><strong>${reportSummary.approved}/${reportSummary.pending}/${reportSummary.rejected}</strong></div>
+                </div>
+              </div>
+            </div>
           </div>
-          <table style="width:100%;border-collapse:collapse;font-size:13px;">
-            <thead>
-              <tr style="background:#0f766e;color:white;">
-                <th style="padding:8px;border:1px solid #d7dee8;text-align:left;">SL</th>
-                <th style="padding:8px;border:1px solid #d7dee8;text-align:left;">Period</th>
-                <th style="padding:8px;border:1px solid #d7dee8;text-align:left;">Amount</th>
-                <th style="padding:8px;border:1px solid #d7dee8;text-align:left;">Shares</th>
-                <th style="padding:8px;border:1px solid #d7dee8;text-align:left;">Method</th>
-                <th style="padding:8px;border:1px solid #d7dee8;text-align:left;">Type</th>
-                <th style="padding:8px;border:1px solid #d7dee8;text-align:left;">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${reportSummary.payments.map((payment, index) => `
-                <tr>
-                  <td style="padding:8px;border:1px solid #d7dee8;">${index + 1}</td>
-                  <td style="padding:8px;border:1px solid #d7dee8;">${MONTHS[payment.month - 1]} ${payment.year}</td>
-                  <td style="padding:8px;border:1px solid #d7dee8;">BDT ${payment.amount.toLocaleString()}</td>
-                  <td style="padding:8px;border:1px solid #d7dee8;">${payment.share_quantity || "-"}</td>
-                  <td style="padding:8px;border:1px solid #d7dee8;">${payment.payment_method === "mobile_banking" ? "Mobile Banking" : "Bank"}</td>
-                  <td style="padding:8px;border:1px solid #d7dee8;">${payment.payment_type || "share"}</td>
-                  <td style="padding:8px;border:1px solid #d7dee8;">${payment.status}</td>
+          <div style="margin:22px 0 12px;">
+            <p style="margin:0;font-size:16px;font-weight:800;letter-spacing:0.01em;color:#111827;">বিস্তারিত পেমেন্ট তালিকা / Detailed Payment List</p>
+          </div>
+          <div style="overflow:hidden;border:1px solid #d6deea;border-radius:6px;">
+            <table style="width:100%;border-collapse:collapse;font-size:12.5px;background:#ffffff;">
+              <thead>
+                <tr style="background:#247657;color:#ffffff;">
+                  <th style="padding:12px 10px;border-right:1px solid rgba(255,255,255,0.24);text-align:left;font-weight:800;">ক্রম /<br />SL</th>
+                  <th style="padding:12px 10px;border-right:1px solid rgba(255,255,255,0.24);text-align:left;font-weight:800;">নাম / Name</th>
+                  <th style="padding:12px 10px;border-right:1px solid rgba(255,255,255,0.24);text-align:left;font-weight:800;">মোবাইল / Mobile</th>
+                  <th style="padding:12px 10px;border-right:1px solid rgba(255,255,255,0.24);text-align:left;font-weight:800;">মাস / Month</th>
+                  <th style="padding:12px 10px;border-right:1px solid rgba(255,255,255,0.24);text-align:left;font-weight:800;">শেয়ার / Shares</th>
+                  <th style="padding:12px 10px;border-right:1px solid rgba(255,255,255,0.24);text-align:left;font-weight:800;">পরিমাণ / Amount</th>
+                  <th style="padding:12px 10px;border-right:1px solid rgba(255,255,255,0.24);text-align:left;font-weight:800;">মাধ্যম / Method</th>
+                  <th style="padding:12px 10px;text-align:left;font-weight:800;">স্ট্যাটাস / Status</th>
                 </tr>
-              `).join("")}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                ${reportSummary.payments.map((payment, index) => `
+                  <tr style="border-bottom:1px solid #d6deea;background:${index % 2 === 0 ? "#ffffff" : "#fbfcfd"};">
+                    <td style="padding:12px 10px;border-right:1px solid #d6deea;color:#111827;">${index + 1}</td>
+                    <td style="padding:12px 10px;border-right:1px solid #d6deea;color:#111827;font-weight:700;">${name || "Member"}</td>
+                    <td style="padding:12px 10px;border-right:1px solid #d6deea;color:#374151;">${mobile || "-"}</td>
+                    <td style="padding:12px 10px;border-right:1px solid #d6deea;color:#374151;">${MONTHS[payment.month - 1]} ${payment.year}</td>
+                    <td style="padding:12px 10px;border-right:1px solid #d6deea;color:#374151;">${payment.share_quantity || 0}</td>
+                    <td style="padding:12px 10px;border-right:1px solid #d6deea;color:#111827;font-weight:700;">৳${payment.amount.toLocaleString()}</td>
+                    <td style="padding:12px 10px;border-right:1px solid #d6deea;color:#374151;">${payment.payment_method === "mobile_banking" ? "মোবাইল ব্যাংকিং (Mobile Banking)" : "ব্যাংক (Bank)"}</td>
+                    <td style="padding:12px 10px;color:#374151;">${payment.status === "approved" ? "অনুমোদিত (Approved)" : payment.status === "pending" ? "অপেক্ষমাণ (Pending)" : "প্রত্যাখ্যাত (Rejected)"}</td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>
+          <p style="margin:18px 0 0;font-size:10px;line-height:1.5;color:#9ca3af;">This report is generated from your filtered Amicitia payment history and is intended for your personal review and record keeping.</p>
         </div>
       `;
 
@@ -1004,6 +1073,26 @@ export default function ProfilePage() {
           )}
         </CardContent>
       </Card>
+      <div className="mt-4 rounded-2xl bg-muted/20 px-4 py-3 text-center text-sm font-medium text-muted-foreground">
+        Developed by{" "}
+        <a
+          href="https://www.facebook.com/orh.bd"
+          target="_blank"
+          rel="noreferrer"
+          className="text-primary underline-offset-4 hover:underline"
+        >
+          Obaidur Rahman Humayun
+        </a>{" "}
+        &{" "}
+        <a
+          href="https://www.facebook.com/abin0x"
+          target="_blank"
+          rel="noreferrer"
+          className="text-primary underline-offset-4 hover:underline"
+        >
+          Mahmudul Hasan Abin
+        </a>
+      </div>
     </div>
   );
 }

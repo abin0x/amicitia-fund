@@ -23,7 +23,7 @@ import {
 import { toast } from "sonner";
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-const REPORT_PDF_LOGO_SRC = `${window.location.origin}/report-page-logo.png`;
+const REPORT_PDF_LOGO_SRC = `${window.location.origin}/Download/Whisk_a465b97bea474818dec4581bfbfd66d8dr-removebg-preview.png`;
 
 const getReportPdfLogoDataUrl = async () => {
   try {
@@ -109,65 +109,112 @@ const buildPdfBlob = async (report: ReportData) => {
   reportNode.style.background = "#ffffff";
   reportNode.style.color = "#0f172a";
   reportNode.style.padding = "48px";
+  const generatedAt = format(new Date(), "dd MMM yyyy, hh:mm a");
+  const collectionShare = report.payments.length > 0
+    ? Math.round((report.totalApproved / report.payments.length) * 100)
+    : 0;
+  const statusPill = (status: string) => {
+    if (status === "approved") {
+      return "background:#dcfce7;color:#166534;border:1px solid #86efac;";
+    }
+    if (status === "pending") {
+      return "background:#fef3c7;color:#92400e;border:1px solid #fcd34d;";
+    }
+    return "background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;";
+  };
+  const averageTicket = report.totalApproved > 0
+    ? Math.round(report.totalCollected / report.totalApproved)
+    : 0;
   reportNode.innerHTML = `
     <div style="font-family:Arial,sans-serif;">
-      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;margin-bottom:22px;">
-        <img src="${logoSrc}" alt="Amicitia logo" style="height:216px;width:auto;object-fit:contain;background:transparent;" />
-        <p style="margin:-8px 0 0;font-size:18px;font-weight:800;letter-spacing:0.2em;text-transform:uppercase;color:#0f172a;">AMICITIA ADMIN REPORT</p>
-      </div>
-      <div style="display:flex;justify-content:space-between;gap:20px;align-items:flex-start;margin-bottom:24px;">
-        <div>
-          <h1 style="margin:8px 0 0;font-size:32px;">${report.title}</h1>
-          <p style="margin:10px 0 0;color:#475569;">Generated on ${format(new Date(), "dd MMM yyyy, hh:mm a")}</p>
+      <div style="position:relative;border:1px solid #d7dee8;border-radius:10px;background:#ffffff;padding:26px 30px 28px 42px;box-shadow:0 24px 48px rgba(15,23,42,0.10);overflow:hidden;">
+        <div style="position:absolute;left:0;top:0;height:132px;width:18px;background:#546db4;"></div>
+        <div style="position:absolute;right:0;bottom:0;height:160px;width:18px;background:#59c69a;"></div>
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:18px;">
+          <div>
+            <p style="margin:0;font-size:12px;color:#94a3b8;">Amicitia Admin Report</p>
+            <h1 style="margin:8px 0 0;font-size:34px;line-height:1.15;font-weight:800;color:#111827;">${report.title}</h1>
+            <div style="margin-top:10px;height:4px;width:72px;border-radius:999px;background:linear-gradient(90deg,#5fd3c8,#7dd3fc);"></div>
+            <p style="margin:12px 0 0;font-size:12px;line-height:1.6;color:#64748b;">Generated on ${generatedAt}</p>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:center;min-width:300px;min-height:180px;border:1px solid #e5e7eb;border-radius:14px;background:#ffffff;">
+            <img src="${logoSrc}" alt="Amicitia logo" style="height:168px;width:auto;object-fit:contain;" />
+          </div>
         </div>
-        <div style="min-width:220px;border:1px solid #d7dee8;border-radius:16px;padding:14px;background:#f8fafc;">
-          <p style="margin:0;font-size:12px;color:#64748b;">Payments in report</p>
-          <p style="margin:6px 0 0;font-size:24px;font-weight:800;">${report.payments.length}</p>
+      </div>
+      <div style="margin-top:22px;">
+        <p style="margin:0 0 14px;font-size:14px;font-weight:800;letter-spacing:0.03em;text-transform:uppercase;color:#111827;">Summary</p>
+        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;">
+          <div style="border-radius:16px;padding:16px 18px;background:linear-gradient(135deg,#eef2ff,#ddd6fe);box-shadow:0 10px 24px rgba(99,102,241,0.10);">
+            <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;">
+              <div>
+                <p style="margin:0;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#0f172a;">Total Collected</p>
+                <p style="margin:8px 0 0;font-size:20px;font-weight:800;color:#111827;">BDT ${report.totalCollected.toLocaleString()}</p>
+              </div>
+              <p style="margin:0;font-size:30px;font-weight:800;color:#64748b;">${report.totalApproved}</p>
+            </div>
+            <p style="margin:12px 0 0;font-size:11px;color:#6b7280;">Generated ${generatedAt}</p>
+          </div>
+          <div style="border-radius:16px;padding:16px 18px;background:linear-gradient(135deg,#dcfce7,#d1fae5);box-shadow:0 10px 24px rgba(16,185,129,0.10);">
+            <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;">
+              <div>
+                <p style="margin:0;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#0f172a;">Total Shares</p>
+                <p style="margin:8px 0 0;font-size:20px;font-weight:800;color:#111827;">${report.totalShares}</p>
+              </div>
+              <p style="margin:0;font-size:30px;font-weight:800;color:#111827;">${collectionShare}%</p>
+            </div>
+            <p style="margin:12px 0 0;font-size:11px;color:#6b7280;">Approval ratio across ${report.payments.length} entries</p>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:14px;">
+          <div style="border-radius:12px;background:#f3f4f6;padding:14px 16px;">
+            <p style="margin:0;font-size:12px;color:#6b7280;">Approved Payments</p>
+            <p style="margin:8px 0 0;font-size:22px;font-weight:800;color:#111827;">${report.totalApproved}</p>
+          </div>
+          <div style="border-radius:12px;background:#f3f4f6;padding:14px 16px;">
+            <p style="margin:0;font-size:12px;color:#6b7280;">Pending / Rejected</p>
+            <p style="margin:8px 0 0;font-size:22px;font-weight:800;color:#111827;">${report.totalPending} / ${report.totalRejected}</p>
+          </div>
+          <div style="border-radius:12px;background:#f3f4f6;padding:14px 16px;">
+            <p style="margin:0;font-size:12px;color:#6b7280;">Entries / Average</p>
+            <p style="margin:8px 0 0;font-size:22px;font-weight:800;color:#111827;">${report.payments.length} / ৳${averageTicket.toLocaleString()}</p>
+          </div>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:22px;">
-        <div style="background:#ecfdf5;border:1px solid #bbf7d0;border-radius:14px;padding:14px;"><p style="margin:0;font-size:12px;color:#166534;">Collected</p><p style="margin:8px 0 0;font-size:24px;font-weight:800;">BDT ${report.totalCollected.toLocaleString()}</p></div>
-        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:14px;padding:14px;"><p style="margin:0;font-size:12px;color:#1d4ed8;">Shares</p><p style="margin:8px 0 0;font-size:24px;font-weight:800;">${report.totalShares}</p></div>
-        <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:14px;padding:14px;"><p style="margin:0;font-size:12px;color:#a16207;">Pending</p><p style="margin:8px 0 0;font-size:24px;font-weight:800;">${report.totalPending}</p></div>
-        <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:14px;padding:14px;"><p style="margin:0;font-size:12px;color:#b91c1c;">Rejected</p><p style="margin:8px 0 0;font-size:24px;font-weight:800;">${report.totalRejected}</p></div>
+      <div style="margin:22px 0 12px;">
+        <p style="margin:0;font-size:16px;font-weight:800;letter-spacing:0.01em;color:#111827;">বিস্তারিত পেমেন্ট তালিকা / Detailed Payment List</p>
       </div>
-      <table style="width:100%;border-collapse:collapse;font-size:15px;margin-bottom:20px;">
-        <thead><tr style="background:#0f766e;color:white;"><th style="padding:10px;border:1px solid #d7dee8;text-align:left;">Metric</th><th style="padding:10px;border:1px solid #d7dee8;text-align:left;">Value</th></tr></thead>
-        <tbody>
-          <tr><td style="padding:10px;border:1px solid #d7dee8;">Approved Payments</td><td style="padding:10px;border:1px solid #d7dee8;">${report.totalApproved}</td></tr>
-          <tr><td style="padding:10px;border:1px solid #d7dee8;">Bank Payments</td><td style="padding:10px;border:1px solid #d7dee8;">${report.bankCount} (BDT ${report.bankAmount.toLocaleString()})</td></tr>
-          <tr><td style="padding:10px;border:1px solid #d7dee8;">Mobile Payments</td><td style="padding:10px;border:1px solid #d7dee8;">${report.mobileCount} (BDT ${report.mobileAmount.toLocaleString()})</td></tr>
-        </tbody>
-      </table>
-      <h2 style="margin:0 0 12px;font-size:22px;">Detailed Payments</h2>
-      <table style="width:100%;border-collapse:collapse;font-size:13px;">
-        <thead>
-          <tr style="background:#0f172a;color:white;">
-            <th style="padding:9px;border:1px solid #d7dee8;text-align:left;">SL</th>
-            <th style="padding:9px;border:1px solid #d7dee8;text-align:left;">Name</th>
-            <th style="padding:9px;border:1px solid #d7dee8;text-align:left;">Email</th>
-            <th style="padding:9px;border:1px solid #d7dee8;text-align:left;">Mobile</th>
-            <th style="padding:9px;border:1px solid #d7dee8;text-align:left;">Period</th>
-            <th style="padding:9px;border:1px solid #d7dee8;text-align:left;">Amount</th>
-            <th style="padding:9px;border:1px solid #d7dee8;text-align:left;">Method</th>
-            <th style="padding:9px;border:1px solid #d7dee8;text-align:left;">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${report.payments.map((payment, index) => `
-            <tr>
-              <td style="padding:8px;border:1px solid #d7dee8;">${index + 1}</td>
-              <td style="padding:8px;border:1px solid #d7dee8;">${payment.member_name}</td>
-              <td style="padding:8px;border:1px solid #d7dee8;">${payment.member_email}</td>
-              <td style="padding:8px;border:1px solid #d7dee8;">${payment.member_mobile}</td>
-              <td style="padding:8px;border:1px solid #d7dee8;">${MONTHS[payment.month - 1]} ${payment.year}</td>
-              <td style="padding:8px;border:1px solid #d7dee8;">BDT ${payment.amount.toLocaleString()}</td>
-              <td style="padding:8px;border:1px solid #d7dee8;">${payment.payment_method === "mobile_banking" ? "Mobile Banking" : "Bank"}</td>
-              <td style="padding:8px;border:1px solid #d7dee8;">${payment.status}</td>
+      <div style="overflow:hidden;border:1px solid #d6deea;border-radius:6px;">
+        <table style="width:100%;border-collapse:collapse;font-size:12.5px;background:#ffffff;">
+          <thead>
+            <tr style="background:#247657;color:#ffffff;">
+              <th style="padding:12px 10px;border-right:1px solid rgba(255,255,255,0.24);text-align:left;font-weight:800;">ক্রম /<br />SL</th>
+              <th style="padding:12px 10px;border-right:1px solid rgba(255,255,255,0.24);text-align:left;font-weight:800;">নাম / Name</th>
+              <th style="padding:12px 10px;border-right:1px solid rgba(255,255,255,0.24);text-align:left;font-weight:800;">মোবাইল / Mobile</th>
+              <th style="padding:12px 10px;border-right:1px solid rgba(255,255,255,0.24);text-align:left;font-weight:800;">মাস / Month</th>
+              <th style="padding:12px 10px;border-right:1px solid rgba(255,255,255,0.24);text-align:left;font-weight:800;">শেয়ার / Shares</th>
+              <th style="padding:12px 10px;border-right:1px solid rgba(255,255,255,0.24);text-align:left;font-weight:800;">পরিমাণ / Amount</th>
+              <th style="padding:12px 10px;border-right:1px solid rgba(255,255,255,0.24);text-align:left;font-weight:800;">মাধ্যম / Method</th>
+              <th style="padding:12px 10px;text-align:left;font-weight:800;">স্ট্যাটাস / Status</th>
             </tr>
-          `).join("")}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            ${report.payments.map((payment, index) => `
+              <tr style="border-bottom:1px solid #d6deea;background:${index % 2 === 0 ? "#ffffff" : "#fbfcfd"};">
+                <td style="padding:12px 10px;border-right:1px solid #d6deea;color:#111827;">${index + 1}</td>
+                <td style="padding:12px 10px;border-right:1px solid #d6deea;color:#111827;font-weight:700;">${payment.member_name}</td>
+                <td style="padding:12px 10px;border-right:1px solid #d6deea;color:#374151;">${payment.member_mobile}</td>
+                <td style="padding:12px 10px;border-right:1px solid #d6deea;color:#374151;">${MONTHS[payment.month - 1]} ${payment.year}</td>
+                <td style="padding:12px 10px;border-right:1px solid #d6deea;color:#374151;">${payment.share_quantity || 0}</td>
+                <td style="padding:12px 10px;border-right:1px solid #d6deea;color:#111827;font-weight:700;">৳${payment.amount.toLocaleString()}</td>
+                <td style="padding:12px 10px;border-right:1px solid #d6deea;color:#374151;">${payment.payment_method === "mobile_banking" ? "মোবাইল ব্যাংকিং (Mobile Banking)" : "ব্যাংক (Bank)"}</td>
+                <td style="padding:12px 10px;color:#374151;">${payment.status === "approved" ? "অনুমোদিত (Approved)" : payment.status === "pending" ? "অপেক্ষমাণ (Pending)" : "প্রত্যাখ্যাত (Rejected)"}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+      <p style="margin:18px 0 0;font-size:10px;line-height:1.5;color:#9ca3af;">This report is generated from the current Amicitia payment records and is intended for review, reporting, and internal tracking purposes.</p>
     </div>
   `;
 
@@ -495,18 +542,6 @@ export default function AdminReports() {
 
   return (
     <div className="space-y-6">
-      <div className="relative overflow-hidden rounded-[32px] border border-border/70 bg-gradient-to-br from-card via-card to-muted/30 px-6 py-8 shadow-[0_18px_44px_rgba(16,24,40,0.10)]">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(15,118,110,0.12),transparent_48%)]" />
-        <div className="relative flex flex-col items-center text-center">
-          <img src="/report-page-logo.png" alt="Amicitia" className="h-20 w-auto max-w-full object-contain sm:h-24" />
-          <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.22em] text-primary/80">Admin Reporting Center</p>
-          <h1 className="mt-2 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">Generate and Export Reports</h1>
-          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            Filter members, periods, and payment status from one place, then export the result as CSV or PDF.
-          </p>
-        </div>
-      </div>
-
       <Card className="overflow-hidden rounded-[28px] border border-border/70 bg-card/88 shadow-[0_16px_40px_rgba(16,24,40,0.10)] backdrop-blur-xl">
         <CardHeader className="border-b border-border/60 bg-muted/20 pb-4">
           <div>
